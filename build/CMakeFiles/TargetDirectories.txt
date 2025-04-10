@@ -1,0 +1,3 @@
+D:/GCC/code/Cmake/Cmake_Game/build/CMakeFiles/PlaneGame-1.0.dir
+D:/GCC/code/Cmake/Cmake_Game/build/CMakeFiles/ALL_BUILD.dir
+D:/GCC/code/Cmake/Cmake_Game/build/CMakeFiles/ZERO_CHECK.dir
