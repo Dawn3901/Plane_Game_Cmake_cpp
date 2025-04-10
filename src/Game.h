@@ -4,7 +4,10 @@
 class Game
 {
 public:
-    Game() = default;
+    static Game& get_instance(){
+        static Game instance;
+        return instance;
+    }
     ~Game();
     void init();
     void clean();
@@ -13,6 +16,14 @@ public:
     void handle_event(SDL_Event* event);
     void update();
     void render();
+    SDL_Window* get_window() { return window;}
+    SDL_Renderer* get_renderer() { return renderer;}
+    int get_window_width();
+    int get_window_height();
+private:
+    Game() = default;
+    Game(const Game&) = delete;
+    Game& operator=(const Game&) = delete;
 private:
     bool Is_running = true;
     Scene* current_scene = nullptr;
