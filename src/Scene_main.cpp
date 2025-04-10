@@ -2,7 +2,7 @@
 
 void Scene_main::init()
 {
-
+    
 }
 void Scene_main::clean()
 {

@@ -7,5 +7,9 @@
 
 int main(int,char**)
 {
+    Game* start = new Game();
+    start->init();
+    start->run();
+    delete start;
     return 0;
 }
