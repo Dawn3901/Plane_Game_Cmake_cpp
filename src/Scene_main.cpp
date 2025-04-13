@@ -72,6 +72,9 @@ void Scene_main::keyboard_control(float delta_time)
 {
     auto keyboard_state = SDL_GetKeyboardState(NULL);
     // 控制玩家移动
+    if(keyboard_state[SDL_SCANCODE_LSHIFT])
+        player->speed = 300;
+    else player->speed = 200;
     if(keyboard_state[SDL_SCANCODE_W] | keyboard_state[SDL_SCANCODE_UP])
     {
         player->postion.y -= delta_time * player->speed;
