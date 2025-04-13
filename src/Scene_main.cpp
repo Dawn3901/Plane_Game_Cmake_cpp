@@ -40,9 +40,34 @@ void Scene_main::render()
 }
 void Scene_main::update()
 {
-
+    keyboard_control();
 }
 void Scene_main::handle_event(SDL_Event* event)
 {
     
+}
+//键盘控制飞机移动
+void Scene_main::keyboard_control()
+{
+    auto keyboard_state = SDL_GetKeyboardState(NULL);
+    if(keyboard_state[SDL_SCANCODE_W] | keyboard_state[SDL_SCANCODE_UP])
+    {
+        player->postion.y -= 1;
+    }
+    if(keyboard_state[SDL_SCANCODE_S] | keyboard_state[SDL_SCANCODE_DOWN])
+    {
+        player->postion.y += 1;
+    }
+    if(keyboard_state[SDL_SCANCODE_A] | keyboard_state[SDL_SCANCODE_LEFT])
+    {
+        player->postion.x -= 1;
+    }
+    if(keyboard_state[SDL_SCANCODE_D] | keyboard_state[SDL_SCANCODE_RIGHT])
+    {
+        player->postion.x += 1;
+    }
+    if(player->postion.x < 0){ player->postion.x = 0;}
+    if(player->postion.x > game.get_window_width() - player->width){ player->postion.x = game.get_window_width() - player->width;}
+    if(player->postion.y < 0){ player->postion.y = 0;}
+    if(player->postion.y > game.get_window_height() - player->height){ player->postion.y = game.get_window_height() - player->height;}
 }

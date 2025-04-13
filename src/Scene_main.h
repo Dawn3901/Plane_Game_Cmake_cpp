@@ -14,6 +14,7 @@ public:
     void render() override;
     void update() override;
     void handle_event(SDL_Event* event) override;
+    void keyboard_control();
 private:
     Game& game;
     Player* player;
