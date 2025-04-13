@@ -12,9 +12,9 @@ public:
     void init() override;
     void clean() override;
     void render() override;
-    void update() override;
+    void update(float) override;
     void handle_event(SDL_Event* event) override;
-    void keyboard_control();
+    void keyboard_control(float);
 private:
     Game& game;
     Player* player;

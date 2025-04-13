@@ -38,33 +38,33 @@ void Scene_main::render()
     SDL_Rect player_rect = {static_cast<int>(player->postion.x),static_cast<int>(player->postion.y),player->width,player->height};
     SDL_RenderCopy(game.get_renderer(),player->texture,NULL,&player_rect);
 }
-void Scene_main::update()
+void Scene_main::update(float delta_time)
 {
-    keyboard_control();
+    keyboard_control(delta_time);
 }
 void Scene_main::handle_event(SDL_Event* event)
 {
     
 }
 //键盘控制飞机移动
-void Scene_main::keyboard_control()
+void Scene_main::keyboard_control(float delta_time)
 {
     auto keyboard_state = SDL_GetKeyboardState(NULL);
     if(keyboard_state[SDL_SCANCODE_W] | keyboard_state[SDL_SCANCODE_UP])
     {
-        player->postion.y -= 1;
+        player->postion.y -= delta_time * player->speed;
     }
     if(keyboard_state[SDL_SCANCODE_S] | keyboard_state[SDL_SCANCODE_DOWN])
     {
-        player->postion.y += 1;
+        player->postion.y += delta_time * player->speed;
     }
     if(keyboard_state[SDL_SCANCODE_A] | keyboard_state[SDL_SCANCODE_LEFT])
     {
-        player->postion.x -= 1;
+        player->postion.x -= delta_time * player->speed;
     }
     if(keyboard_state[SDL_SCANCODE_D] | keyboard_state[SDL_SCANCODE_RIGHT])
     {
-        player->postion.x += 1;
+        player->postion.x += delta_time * player->speed;
     }
     if(player->postion.x < 0){ player->postion.x = 0;}
     if(player->postion.x > game.get_window_width() - player->width){ player->postion.x = game.get_window_width() - player->width;}
