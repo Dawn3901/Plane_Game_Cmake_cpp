@@ -93,13 +93,19 @@ void Scene_main::keyboard_control(float delta_time)
     if(player->postion.y < 0){ player->postion.y = 0;}
     if(player->postion.y > game.get_window_height() - player->height){ player->postion.y = game.get_window_height() - player->height;}
     // 控制子弹发射
-    if(keyboard_state[SDL_SCANCODE_J])
+    if(keyboard_state[SDL_SCANCODE_J] | keyboard_state[SDL_SCANCODE_U])
     {
         // 子弹冷却控制
         auto current_time = SDL_GetTicks();
         if(current_time -  player->last_shot_time > player->cool_down)
         { 
-            shoot();
+            if(keyboard_state[SDL_SCANCODE_J])
+            {
+                shoot();
+            }
+            else{
+                double_shoot();
+            }
             player->last_shot_time = current_time;
         }
     }
@@ -111,6 +117,18 @@ void Scene_main::shoot()
     bullet_player->position.y = player->postion.y;
     bullets.push_back(bullet_player);
 }
+void Scene_main::double_shoot()
+{
+    Bullet* bullet_player_1 = new Bullet(template_bullet);
+    bullet_player_1->position.x = player->postion.x + player->width/2 - bullet_player_1->width/2 - 10;
+    bullet_player_1->position.y = player->postion.y;
+    bullets.push_back(bullet_player_1);
+    Bullet* bullet_player_2 = new Bullet(template_bullet);
+    bullet_player_2->position.x = player->postion.x + player->width/2 - bullet_player_2->width/2 + 10;
+    bullet_player_2->position.y = player->postion.y;
+    bullets.push_back(bullet_player_2);
+}
+
 void Scene_main::update_bullets(float delta_time)
 {
     int margin = 32;

@@ -16,6 +16,7 @@ public:
     void handle_event(SDL_Event* event) override;
     void keyboard_control(float);
     void shoot();
+    void double_shoot();
     void update_bullets(float);
     void render_bullets();
 private:
