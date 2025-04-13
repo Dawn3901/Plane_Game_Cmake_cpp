@@ -1,7 +1,7 @@
 #pragma once
 #include "Object.h"
 #include "Scene.h"
-
+#include <list>
 class Game;
 
 class Scene_main : public Scene
@@ -15,7 +15,13 @@ public:
     void update(float) override;
     void handle_event(SDL_Event* event) override;
     void keyboard_control(float);
+    void shoot();
+    void update_bullets(float);
+    void render_bullets();
 private:
     Game& game;
     Player* player;
+    Bullet template_bullet;
+    std::list<Bullet*> bullets;//子弹列表
 };
+

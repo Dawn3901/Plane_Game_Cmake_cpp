@@ -9,28 +9,33 @@ Game::~Game()
 void Game::init()
 {
     frame_time = 1000.0f / FPS;
+    // 初始化 SDL
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,"SDL could not initailize! SDL error: %s\n", SDL_GetError());
         Is_running = false;
     }
+    // 初始化 窗口
     window = SDL_CreateWindow("Plane Game",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,window_width,window_height,SDL_WINDOW_SHOWN);
     if(window == nullptr)
     {
         SDL_LogError(SDL_LOG_CATEGORY_RENDER,"Window could not be created! SDL error: %s\n",SDL_GetError());
         Is_running = false;
     }
+    // 初始化 渲染器
     renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
     if(renderer == nullptr)
     {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,"Renderer could not be created! SDL error: %s\n",SDL_GetError());
         Is_running = false;
     }
+    // 初始化 图片
     if(IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) != (IMG_INIT_JPG | IMG_INIT_PNG))
     {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,"IMG could not initialize! iMG error: %s\n",IMG_GetError());
         Is_running = false;
     }
+    // 新建并初始化场景
     current_scene = new Scene_main();
     current_scene->init();
 }
@@ -55,6 +60,7 @@ void Game::run()
         handle_event(&event);
         update(delta_time);
         render();
+        // 使用帧率控制
         auto frame_end = std::chrono::high_resolution_clock::now();
         float duration = std::chrono::duration_cast<std::chrono::milliseconds>(frame_end  - frame_start).count();
         if(duration < frame_time)
