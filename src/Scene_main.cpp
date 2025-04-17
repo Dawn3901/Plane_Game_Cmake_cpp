@@ -3,6 +3,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <chrono>
+#include <random>
 
 Scene_main::Scene_main():game(Game::get_instance()),player(new Player())
 {
@@ -15,6 +16,12 @@ Scene_main::~Scene_main()
 }
 void Scene_main::init()
 {
+    // 生成随机数
+    std::random_device rd;// 生成随机数种子
+    gen = std::mt19937(rd());// 生成随机数引擎
+    dis = std::uniform_real_distribution<float>(0.0f,1.0f);// 指定随机分布
+    auto r = dis(gen); // 获取随机数
+
     //加载玩家的材质
     player->texture = IMG_LoadTexture(game.get_renderer(),"assets/image/SpaceShip.png");
     if(player->texture == nullptr)
@@ -26,6 +33,13 @@ void Scene_main::init()
     player->width/=4;
     player->postion.x = game.get_window_width() / 2 - player->width / 2;
     player->postion.y = game.get_window_height() - player->height;
+    
+    // 加载敌机的材质(敌机模板)
+    template_enemy.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/insect-1.png");
+    SDL_QueryTexture(template_enemy.texture,NULL,NULL,&template_enemy.width,&template_enemy.height);
+    template_enemy.width /=4;
+    template_enemy.height /=4;
+
     //加载子弹的材质(先创建一个子弹模板)
     template_bullet.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/bullet.png");
     SDL_QueryTexture(template_bullet.texture,NULL,NULL,&template_bullet.width,&template_bullet.height);
@@ -34,11 +48,14 @@ void Scene_main::init()
 }
 void Scene_main::clean()
 {
+    // 清理玩家材质
     if(player->texture != nullptr)
     {
         SDL_DestroyTexture(player->texture);
     }
-    for(auto& bullet : bullets){
+    // 清理子弹
+    for(auto& bullet : bullets)
+    {
         if(bullet != nullptr)
         {
            delete bullet;
@@ -49,19 +66,37 @@ void Scene_main::clean()
     {
         SDL_DestroyTexture(template_bullet.texture);
     }
+    // 清理敌机
+    for(auto& enemy:enemies)
+    {
+        if(enemy != nullptr)
+        {
+            delete enemy;
+        }
+    }
+    enemies.clear();
+    if(template_enemy.texture != nullptr)
+    {
+        SDL_DestroyTexture(template_enemy.texture);
+    }
+
 }
 void Scene_main::render()
 {
-    //渲染玩家
+    // 渲染玩家
     SDL_Rect player_rect = {static_cast<int>(player->postion.x),static_cast<int>(player->postion.y),player->width,player->height};
     SDL_RenderCopy(game.get_renderer(),player->texture,NULL,&player_rect);
-    //渲染子弹
+    // 渲染子弹
     render_bullets();
+    // 渲染敌机
+    render_enemies();
 }
 void Scene_main::update(float delta_time)
 {
     keyboard_control(delta_time);
     update_bullets(delta_time);
+    spawn_enemy();
+    update_enemies(delta_time);
 }
 void Scene_main::handle_event(SDL_Event* event)
 {
@@ -158,5 +193,37 @@ void Scene_main::render_bullets()
     {
         SDL_Rect bullet_rect = {static_cast<int>(bullet->position.x),static_cast<int>(bullet->position.y),bullet->width,bullet->height};
         SDL_RenderCopy(game.get_renderer(),bullet->texture,NULL,&bullet_rect);
+    }
+}
+void Scene_main::spawn_enemy()
+{
+    // 每帧调用, 但是需要判断是否生成敌机
+    if(dis(gen) > 1.0f/60.0f) return;
+    Enemy* enemy = new Enemy(template_enemy);
+    enemy->postion.x = dis(gen) * (game.get_window_width() - enemy->width);
+    enemy->postion.y = - enemy->height;
+    enemies.push_back(enemy);
+}
+void Scene_main::update_enemies(float delta_time)
+{
+    for(auto it = enemies.begin();it != enemies.end();)
+    {
+        auto enemy = *it;
+        enemy->postion.y += enemy->speed * delta_time;
+        if(enemy->postion.y > game.get_window_height()){
+            delete enemy;
+            it = enemies.erase(it);
+        }
+        else{
+            it++;
+        }
+    }
+}
+void Scene_main::render_enemies()
+{
+    for(auto enemy:enemies)
+    {
+        SDL_Rect enemy_rect = {static_cast<int>(enemy->postion.x),static_cast<int>(enemy->postion.y),enemy->width,enemy->height};
+        SDL_RenderCopy(game.get_renderer(),enemy->texture,NULL,&enemy_rect);
     }
 }
