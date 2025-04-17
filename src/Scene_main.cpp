@@ -39,7 +39,10 @@ void Scene_main::init()
     SDL_QueryTexture(template_enemy.texture,NULL,NULL,&template_enemy.width,&template_enemy.height);
     template_enemy.width /=4;
     template_enemy.height /=4;
-
+    template_enemy_2.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/insect-2.png");
+    SDL_QueryTexture(template_enemy_2.texture,NULL,NULL,&template_enemy_2.width,&template_enemy_2.height);
+    template_enemy_2.width /=4;
+    template_enemy_2.height /=4;
     //加载子弹的材质(先创建一个子弹模板)
     template_bullet.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/bullet.png");
     SDL_QueryTexture(template_bullet.texture,NULL,NULL,&template_bullet.width,&template_bullet.height);
@@ -199,9 +202,12 @@ void Scene_main::spawn_enemy()
 {
     // 每帧调用, 但是需要判断是否生成敌机
     if(dis(gen) > 1.0f/60.0f) return;
-    Enemy* enemy = new Enemy(template_enemy);
+    Enemy* enemy = nullptr;
+    if(dis(gen) > 4.0f/6.0f) enemy = new Enemy(template_enemy_2);
+    else enemy = new Enemy(template_enemy);
     enemy->postion.x = dis(gen) * (game.get_window_width() - enemy->width);
-    enemy->postion.y = - enemy->height;
+    enemy->postion.y = -enemy->height;
+    enemy->speed = enemy->speed/2.0 + enemy->speed * dis(gen); 
     enemies.push_back(enemy);
 }
 void Scene_main::update_enemies(float delta_time)

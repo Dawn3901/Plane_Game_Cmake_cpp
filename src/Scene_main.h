@@ -32,6 +32,7 @@ private:
     Bullet template_bullet;
     std::list<Bullet*> bullets;//子弹列表
     Enemy template_enemy;
+    Enemy template_enemy_2;
     std::list<Enemy*> enemies;
 };
 
