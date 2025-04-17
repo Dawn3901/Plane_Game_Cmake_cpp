@@ -27,6 +27,7 @@ private:
     Game& operator=(const Game&) = delete;
 private:
     bool Is_running = true;
+    bool Is_paused = false;
     Scene* current_scene = nullptr;
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;

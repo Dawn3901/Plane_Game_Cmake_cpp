@@ -2,6 +2,8 @@
 #include "Object.h"
 #include "Scene.h"
 #include <list>
+#include <random>
+
 class Game;
 
 class Scene_main : public Scene
@@ -18,10 +20,17 @@ public:
     void shoot();
     void update_bullets(float);
     void render_bullets();
+    void spawn_enemy();
+    void update_enemies(float);
+    void render_enemies();
 private:
     Game& game;
     Player* player;
+    std::mt19937 gen;
+    std::uniform_real_distribution<float> dis;
     Bullet template_bullet;
     std::list<Bullet*> bullets;//子弹列表
+    Enemy template_enemy;
+    std::list<Enemy*> enemies;
 };
 
