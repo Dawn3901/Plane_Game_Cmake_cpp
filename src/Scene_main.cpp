@@ -39,10 +39,10 @@ void Scene_main::init()
     SDL_QueryTexture(template_enemy.texture,NULL,NULL,&template_enemy.width,&template_enemy.height);
     template_enemy.width /=4;
     template_enemy.height /=4;
-    template_enemy_2.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/insect-2.png");
-    SDL_QueryTexture(template_enemy_2.texture,NULL,NULL,&template_enemy_2.width,&template_enemy_2.height);
-    template_enemy_2.width /=4;
-    template_enemy_2.height /=4;
+    template_monster.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/insect-2.png");
+    SDL_QueryTexture(template_monster.texture,NULL,NULL,&template_monster.width,&template_monster.height);
+    template_monster.width /=4;
+    template_monster.height /=4;
     //加载子弹的材质(先创建一个子弹模板)
     template_bullet.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/bullet.png");
     SDL_QueryTexture(template_bullet.texture,NULL,NULL,&template_bullet.width,&template_bullet.height);
@@ -82,7 +82,18 @@ void Scene_main::clean()
     {
         SDL_DestroyTexture(template_enemy.texture);
     }
-
+    for(auto& monster:monsters)
+    {
+        if(monster!= nullptr)
+        {
+            delete monster;
+        }
+    }
+    monsters.clear();
+    if(template_monster.texture != nullptr)
+    {
+        SDL_DestroyTexture(template_monster.texture);
+    }
 }
 void Scene_main::render()
 {
@@ -202,13 +213,22 @@ void Scene_main::spawn_enemy()
 {
     // 每帧调用, 但是需要判断是否生成敌机
     if(dis(gen) > 1.0f/60.0f) return;
-    Enemy* enemy = nullptr;
-    if(dis(gen) > 4.0f/6.0f) enemy = new Enemy(template_enemy_2);
-    else enemy = new Enemy(template_enemy);
-    enemy->postion.x = dis(gen) * (game.get_window_width() - enemy->width);
-    enemy->postion.y = -enemy->height;
-    enemy->speed = enemy->speed/2.0 + enemy->speed * dis(gen); 
-    enemies.push_back(enemy);
+    if(dis(gen) > 4.0f/6.0f) 
+    {
+        Enemy* monster = new Enemy(template_monster);
+        monster->postion.x = dis(gen) * (game.get_window_width() - monster->width);
+        monster->postion.y = - monster->height;
+        monster->speed = monster->speed/2.0 +(monster->speed/2.0) * dis(gen);
+        monsters.push_back(monster);
+    }
+    else 
+    {
+        Enemy* enemy = new Enemy(template_enemy);
+        enemy->postion.x = dis(gen) * (game.get_window_width() - enemy->width);
+        enemy->postion.y = -enemy->height;
+        enemy->speed = enemy->speed/2.0 + (enemy->speed/3.0) * dis(gen); 
+        enemies.push_back(enemy);
+    }
 }
 void Scene_main::update_enemies(float delta_time)
 {
@@ -220,9 +240,18 @@ void Scene_main::update_enemies(float delta_time)
             delete enemy;
             it = enemies.erase(it);
         }
-        else{
-            it++;
+        else it++;
+    }
+    for(auto it = monsters.begin();it!= monsters.end();)
+    {
+        auto monster = *it;
+        monster->postion.y += monster->speed * delta_time;
+        if(monster->postion.y > game.get_window_width())
+        {
+            delete monster;
+            it = monsters.erase(it);
         }
+        else it++;
     }
 }
 void Scene_main::render_enemies()
@@ -231,5 +260,10 @@ void Scene_main::render_enemies()
     {
         SDL_Rect enemy_rect = {static_cast<int>(enemy->postion.x),static_cast<int>(enemy->postion.y),enemy->width,enemy->height};
         SDL_RenderCopy(game.get_renderer(),enemy->texture,NULL,&enemy_rect);
+    }
+    for(auto monster:monsters)
+    {
+        SDL_Rect monster_rect = {static_cast<int>(monster->postion.x),static_cast<int>(monster->postion.y),monster->width,monster->height};
+        SDL_RenderCopy(game.get_renderer(),monster->texture,NULL,&monster_rect);
     }
 }

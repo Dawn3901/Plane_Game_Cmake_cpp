@@ -27,3 +27,12 @@ struct Bullet
     int height = 0;
     int speed = 400;
 };
+struct enemy_bullet
+{
+    SDL_Texture* texture = nullptr;
+    SDL_FPoint position = {0,0};
+    SDL_FPoint direction = {0,0};
+    int width = 0;
+    int height = 0;
+    int speed = 400;
+};
