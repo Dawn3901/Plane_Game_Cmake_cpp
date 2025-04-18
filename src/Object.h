@@ -8,6 +8,7 @@ struct Player
     int width = 0;
     int height = 0;
     int speed = 200;
+    int current_health = 3;
     Uint32 last_shot_time = 0;
     Uint32 cool_down = 500;
 };
@@ -18,6 +19,7 @@ struct Enemy
     int width = 0;
     int height = 0;
     int speed = 200;
+    int current_health = 2;
     Uint32 last_shot_time = 0;
     Uint32 cool_down = 500;
 };
@@ -28,6 +30,7 @@ struct Bullet
     int width = 0;
     int height = 0;
     int speed = 400;
+    int damage = 1;
 };
 struct Enemy_Bullet
 {
@@ -37,4 +40,5 @@ struct Enemy_Bullet
     int width = 0;
     int height = 0;
     int speed = 400;
+    int damage = 1;
 };

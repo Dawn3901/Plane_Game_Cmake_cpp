@@ -223,10 +223,39 @@ void Scene_main::update_bullets(float delta_time)
         {
             delete bullet;
             it = bullets.erase(it);
-            //SDL_Log("Player's bullet destroyed.");
         }
         else{
-            ++it;
+            bool hit = false;
+            for(auto enemy : enemies)
+            {
+                SDL_Rect bullet_rect = {static_cast<int>(bullet->position.x),static_cast<int>(bullet->position.y),bullet->width,bullet->height};
+                SDL_Rect enemy_rect = {static_cast<int>(enemy->postion.x),static_cast<int>(enemy->postion.y),enemy->width,enemy->height};
+                if(SDL_HasIntersection(&bullet_rect,&enemy_rect))
+                {
+                    enemy->current_health -= bullet->damage;
+                    delete bullet;
+                    it = bullets.erase(it);
+                    hit = true;
+                    break;
+                }
+            }
+            for(auto monster : monsters)
+            {
+                SDL_Rect bullet_rect = {static_cast<int>(bullet->position.x),static_cast<int>(bullet->position.y),bullet->width,bullet->height};
+                SDL_Rect monster_rect = {static_cast<int>(monster->postion.x),static_cast<int>(monster->postion.y),monster->width,monster->height};
+                if(SDL_HasIntersection(&bullet_rect,&monster_rect))
+                {
+                    monster->current_health -= bullet->damage;
+                    delete bullet;
+                    it = bullets.erase(it);
+                    hit = true;
+                    break;
+                }
+            }
+            if(!hit)
+            {
+                ++it;
+            }
         }
     }
 }
@@ -277,6 +306,7 @@ void Scene_main::spawn_enemy()
         monster->postion.y = - monster->height;
         monster->speed = monster->speed/2.0 +(monster->speed/2.0) * dis(gen);
         monster->cool_down = 390;
+        monster->current_health = 3;
         monsters.push_back(monster);
     }
     else 
@@ -306,7 +336,15 @@ void Scene_main::update_enemies(float delta_time)
                 shoot(enemy);
                 enemy->last_shot_time = current_time;
             }
-            it++;
+            if(enemy->current_health <= 0)
+            {
+                enemy_explode(enemy);
+                it = enemies.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
         }
     }
     for(auto it = monsters.begin();it!= monsters.end();)
@@ -325,7 +363,12 @@ void Scene_main::update_enemies(float delta_time)
                 shoot(monster);
                 monster->last_shot_time = current_time;
             }
-            it++;
+            if(monster->current_health <= 0)
+            {
+                enemy_explode(monster);
+                it = monsters.erase(it);
+            }
+            else it++;
         }
     }
 }
@@ -349,4 +392,9 @@ SDL_FPoint Scene_main::get_direction(Enemy* enemy)
     float y = (player->postion.y + player->height/2) - (enemy->postion.y + enemy->height/2);
     float length = sqrt(x*x+y*y);
     return SDL_FPoint{x/length,y/length};
+}
+
+void Scene_main::enemy_explode(Enemy* enemy)
+{
+    delete enemy;
 }

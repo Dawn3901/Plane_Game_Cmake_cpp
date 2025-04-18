@@ -26,6 +26,7 @@ public:
     void spawn_enemy();
     void update_enemies(float);
     void render_enemies();
+    void enemy_explode(Enemy*);
     SDL_FPoint get_direction(Enemy*);
 private:
     Game& game;
