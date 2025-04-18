@@ -4,6 +4,7 @@
 #include <SDL_image.h>
 #include <chrono>
 #include <random>
+const float pi = 3.141593;
 
 Scene_main::Scene_main():game(Game::get_instance()),player(new Player())
 {
@@ -43,11 +44,17 @@ void Scene_main::init()
     SDL_QueryTexture(template_monster.texture,NULL,NULL,&template_monster.width,&template_monster.height);
     template_monster.width /=4;
     template_monster.height /=4;
-    //加载子弹的材质(先创建一个子弹模板)
+    // 加载我方子弹的材质(先创建一个子弹模板)
     template_bullet.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/bullet.png");
     SDL_QueryTexture(template_bullet.texture,NULL,NULL,&template_bullet.width,&template_bullet.height);
     template_bullet.width /=4;
     template_bullet.height /=4;
+    // 加载敌方子弹的材质模板
+    template_enemy_bullet.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/bullet-1.png");
+    SDL_QueryTexture(template_enemy_bullet.texture,NULL,NULL,&template_enemy_bullet.width,&template_enemy_bullet.height);
+    template_enemy_bullet.width /= 4;
+    template_enemy_bullet.height /= 4;
+
 }
 void Scene_main::clean()
 {
@@ -94,6 +101,19 @@ void Scene_main::clean()
     {
         SDL_DestroyTexture(template_monster.texture);
     }
+    // 清理敌方子弹
+    for(auto& bullet:enemy_bullets)
+    {
+        if(bullet != nullptr)
+        {
+            delete bullet;
+        }
+    }
+    enemy_bullets.clear();
+    if (template_enemy_bullet.texture != nullptr)
+    {
+        SDL_DestroyTexture(template_enemy_bullet.texture);
+    }
 }
 void Scene_main::render()
 {
@@ -111,6 +131,7 @@ void Scene_main::update(float delta_time)
     update_bullets(delta_time);
     spawn_enemy();
     update_enemies(delta_time);
+    update_enemy_bullets(delta_time);
 }
 void Scene_main::handle_event(SDL_Event* event)
 {
@@ -181,6 +202,15 @@ void Scene_main::double_shoot()
     bullets.push_back(bullet_player_2);
 }
 
+void Scene_main::shoot(Enemy* enemy)
+{
+    Enemy_Bullet* bullet_enemy = new Enemy_Bullet(template_enemy_bullet);
+    bullet_enemy->position.x = enemy->postion.x + enemy->width/2 - bullet_enemy->width/2;
+    bullet_enemy->position.y = enemy->postion.y + enemy->height;
+    bullet_enemy->direction = get_direction(enemy);
+    enemy_bullets.push_back(bullet_enemy);
+}
+
 void Scene_main::update_bullets(float delta_time)
 {
     int margin = 32;
@@ -188,7 +218,7 @@ void Scene_main::update_bullets(float delta_time)
     for(auto it = bullets.begin();it!= bullets.end();)
     {
         auto bullet = *it;
-        bullet->position.y -=bullet->speed * delta_time;
+        bullet->position.y -= bullet->speed * delta_time;
         if(bullet->position.y + margin < 0)
         {
             delete bullet;
@@ -200,13 +230,40 @@ void Scene_main::update_bullets(float delta_time)
         }
     }
 }
+void Scene_main::update_enemy_bullets(float delta_time)
+{
+    int margin = 32;
+    for(auto it = enemy_bullets.begin();it != enemy_bullets.end();)
+    {
+        auto bullet = *it;
+        bullet->position.y += bullet->speed * bullet->direction.y * delta_time;
+        bullet->position.x += bullet->speed * bullet->direction.x * delta_time;
+        if(bullet->position.x + margin < 0 || bullet->position.x - margin > game.get_window_width()
+        || bullet->position.y + margin < 0 || bullet->position.y - margin > game.get_window_height())
+        {
+            delete bullet;
+            it = enemy_bullets.erase(it);
+        }
+        else{
+            ++it;
+        }
+    }
+}
 
 void Scene_main::render_bullets()
 {
+    // 渲染玩家子弹
     for(auto bullet : bullets)
     {
         SDL_Rect bullet_rect = {static_cast<int>(bullet->position.x),static_cast<int>(bullet->position.y),bullet->width,bullet->height};
         SDL_RenderCopy(game.get_renderer(),bullet->texture,NULL,&bullet_rect);
+    }
+    // 渲染敌机子弹
+    for(auto bullet : enemy_bullets)
+    {
+        SDL_Rect bullet_rect = {static_cast<int>(bullet->position.x),static_cast<int>(bullet->position.y),bullet->width,bullet->height};
+        float angle = atan2(bullet->direction.y,bullet->direction.x) * 180 / pi - 90.0f;
+        SDL_RenderCopyEx(game.get_renderer(),bullet->texture,NULL,&bullet_rect,angle,NULL,SDL_FLIP_NONE);
     }
 }
 void Scene_main::spawn_enemy()
@@ -219,6 +276,7 @@ void Scene_main::spawn_enemy()
         monster->postion.x = dis(gen) * (game.get_window_width() - monster->width);
         monster->postion.y = - monster->height;
         monster->speed = monster->speed/2.0 +(monster->speed/2.0) * dis(gen);
+        monster->cool_down = 390;
         monsters.push_back(monster);
     }
     else 
@@ -232,6 +290,7 @@ void Scene_main::spawn_enemy()
 }
 void Scene_main::update_enemies(float delta_time)
 {
+    auto current_time = SDL_GetTicks();
     for(auto it = enemies.begin();it != enemies.end();)
     {
         auto enemy = *it;
@@ -240,18 +299,34 @@ void Scene_main::update_enemies(float delta_time)
             delete enemy;
             it = enemies.erase(it);
         }
-        else it++;
+        else 
+        {
+            if(current_time - enemy->last_shot_time > enemy->cool_down)
+            {
+                shoot(enemy);
+                enemy->last_shot_time = current_time;
+            }
+            it++;
+        }
     }
     for(auto it = monsters.begin();it!= monsters.end();)
     {
         auto monster = *it;
         monster->postion.y += monster->speed * delta_time;
-        if(monster->postion.y > game.get_window_width())
+        if(monster->postion.y > game.get_window_height())
         {
             delete monster;
             it = monsters.erase(it);
         }
-        else it++;
+        else
+        {
+            if(current_time - monster->last_shot_time > monster->cool_down)
+            {
+                shoot(monster);
+                monster->last_shot_time = current_time;
+            }
+            it++;
+        }
     }
 }
 void Scene_main::render_enemies()
@@ -266,4 +341,12 @@ void Scene_main::render_enemies()
         SDL_Rect monster_rect = {static_cast<int>(monster->postion.x),static_cast<int>(monster->postion.y),monster->width,monster->height};
         SDL_RenderCopy(game.get_renderer(),monster->texture,NULL,&monster_rect);
     }
+}
+
+SDL_FPoint Scene_main::get_direction(Enemy* enemy)
+{
+    float x = (player->postion.x + player->width/2) - (enemy->postion.x + enemy->width/2);
+    float y = (player->postion.y + player->height/2) - (enemy->postion.y + enemy->height/2);
+    float length = sqrt(x*x+y*y);
+    return SDL_FPoint{x/length,y/length};
 }
