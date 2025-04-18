@@ -42,3 +42,14 @@ struct Enemy_Bullet
     int speed = 400;
     int damage = 1;
 };
+struct Explosion
+{
+    SDL_Texture* texture = nullptr;
+    SDL_FPoint postion = {0,0};
+    int width = 0;
+    int height = 0;
+    int current_frame = 0;
+    int total_frame = 0;
+    Uint32 start_time = 0;
+    Uint32 FPS = 10;
+};

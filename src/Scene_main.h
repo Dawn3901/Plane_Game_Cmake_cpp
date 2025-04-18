@@ -23,7 +23,9 @@ public:
     void update_player(float);
     void update_bullets(float);
     void update_enemy_bullets(float);
+    void update_explosion(float);
     void render_bullets();
+    void render_explosion();
     void spawn_enemy();
     void update_enemies(float);
     void render_enemies();
@@ -43,5 +45,7 @@ private:
     std::list<Enemy*> monsters;
     Enemy_Bullet template_enemy_bullet;
     std::list<Enemy_Bullet*> enemy_bullets;
+    Explosion template_explosion;
+    std::list<Explosion*> explosions;
 };
 

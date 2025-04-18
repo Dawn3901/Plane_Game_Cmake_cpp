@@ -54,10 +54,19 @@ void Scene_main::init()
     SDL_QueryTexture(template_enemy_bullet.texture,NULL,NULL,&template_enemy_bullet.width,&template_enemy_bullet.height);
     template_enemy_bullet.width /= 4;
     template_enemy_bullet.height /= 4;
+    // 加载爆炸特性模板
+    template_explosion.texture = IMG_LoadTexture(game.get_renderer(),"assets/effect/explosion.png");
+    SDL_QueryTexture(template_explosion.texture,NULL,NULL,&template_explosion.width,&template_explosion.height);
+    template_explosion.total_frame = template_explosion.width/template_explosion.height;
+    template_explosion.width = template_explosion.height;
 
 }
 void Scene_main::clean()
 {
+    if(template_explosion.texture != nullptr)
+    {
+        SDL_DestroyTexture(template_explosion.texture);
+    }
     // 清理玩家材质
     if(player->texture != nullptr)
     {
@@ -127,6 +136,8 @@ void Scene_main::render()
     render_bullets();
     // 渲染敌机
     render_enemies();
+    // 渲染爆炸特性
+    render_explosion();
 }
 void Scene_main::update(float delta_time)
 {
@@ -136,6 +147,7 @@ void Scene_main::update(float delta_time)
     update_enemies(delta_time);
     update_enemy_bullets(delta_time);
     update_player(delta_time);
+    update_explosion(delta_time);
 }
 void Scene_main::handle_event(SDL_Event* event)
 {
@@ -220,7 +232,14 @@ void Scene_main::update_player(float delta_time)
     if(is_dead) return;
     if(player->current_health <= 0)
     {
+        auto current_time = SDL_GetTicks();
+        Explosion* explosion = new Explosion(template_explosion);
+        explosion->postion.x = player->postion.x + player->width/2 - explosion->width/2;
+        explosion->postion.y = player->postion.y + player->height/2 - explosion->height/2;
+        explosion->start_time = current_time;
+        explosions.push_back(explosion);
         is_dead = true;
+        return;
     }
 }
 void Scene_main::update_bullets(float delta_time)
@@ -296,6 +315,22 @@ void Scene_main::update_enemy_bullets(float delta_time)
             }
             else ++it;
         }
+    }
+}
+
+void Scene_main::update_explosion(float delta_time)
+{
+    auto current_time = SDL_GetTicks();
+    for(auto it = explosions.begin();it != explosions.end();)
+    {
+        auto explosion = *it;
+        explosion->current_frame = (current_time - explosion->start_time) * explosion->FPS / 1000;
+        if(explosion->current_frame > explosion->total_frame)
+        {
+            delete explosion;
+            it = explosions.erase(it);
+        }
+        else ++it;
     }
 }
 
@@ -429,5 +464,21 @@ SDL_FPoint Scene_main::get_direction(Enemy* enemy)
 
 void Scene_main::enemy_explode(Enemy* enemy)
 {
+    auto current_time = SDL_GetTicks();
+    Explosion* explosion = new Explosion(template_explosion);
+    explosion->postion.x = enemy->postion.x + enemy->width/2 - explosion->width/2;
+    explosion->postion.y = enemy->postion.y + enemy->height/2 - explosion->height/2;
+    explosion->start_time = current_time;
+    explosions.push_back(explosion);
     delete enemy;
+}
+
+void Scene_main::render_explosion()
+{
+    for(auto explosion : explosions)
+    {
+        SDL_Rect explosion_src = {explosion->current_frame * explosion->width,0,explosion->width,explosion->width};
+        SDL_Rect explosion_dst = {static_cast<int>(explosion->postion.x),static_cast<int>(explosion->postion.y),explosion->width,explosion->height};
+        SDL_RenderCopy(game.get_renderer(),explosion->texture,&explosion_src,&explosion_dst);
+    }
 }
