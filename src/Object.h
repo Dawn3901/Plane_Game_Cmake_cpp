@@ -10,7 +10,7 @@ struct Player
     int speed = 200;
     int current_health = 3;
     Uint32 last_shot_time = 0;
-    Uint32 cool_down = 500;
+    Uint32 cool_down = 150;
 };
 struct Enemy
 {
@@ -18,10 +18,10 @@ struct Enemy
     SDL_FPoint postion = {0,0};
     int width = 0;
     int height = 0;
-    int speed = 200;
+    int speed = 150;
     int current_health = 2;
     Uint32 last_shot_time = 0;
-    Uint32 cool_down = 500;
+    Uint32 cool_down = 2000;
 };
 struct Bullet
 {

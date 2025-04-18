@@ -20,6 +20,7 @@ public:
     void shoot();
     void double_shoot();
     void shoot(Enemy*);
+    void update_player(float);
     void update_bullets(float);
     void update_enemy_bullets(float);
     void render_bullets();
@@ -31,6 +32,7 @@ public:
 private:
     Game& game;
     Player* player;
+    bool is_dead = false;
     std::mt19937 gen;
     std::uniform_real_distribution<float> dis;
     Bullet template_bullet;

@@ -4,7 +4,7 @@
 #include <SDL_image.h>
 #include <chrono>
 #include <random>
-const float pi = 3.141593;
+const float pi = 3.14159f;
 
 Scene_main::Scene_main():game(Game::get_instance()),player(new Player())
 {
@@ -21,7 +21,7 @@ void Scene_main::init()
     std::random_device rd;// 生成随机数种子
     gen = std::mt19937(rd());// 生成随机数引擎
     dis = std::uniform_real_distribution<float>(0.0f,1.0f);// 指定随机分布
-    auto r = dis(gen); // 获取随机数
+    //auto r = dis(gen); // 获取随机数
 
     //加载玩家的材质
     player->texture = IMG_LoadTexture(game.get_renderer(),"assets/image/SpaceShip.png");
@@ -118,8 +118,11 @@ void Scene_main::clean()
 void Scene_main::render()
 {
     // 渲染玩家
-    SDL_Rect player_rect = {static_cast<int>(player->postion.x),static_cast<int>(player->postion.y),player->width,player->height};
-    SDL_RenderCopy(game.get_renderer(),player->texture,NULL,&player_rect);
+    if(!is_dead)
+    {
+        SDL_Rect player_rect = {static_cast<int>(player->postion.x),static_cast<int>(player->postion.y),player->width,player->height};
+        SDL_RenderCopy(game.get_renderer(),player->texture,NULL,&player_rect);
+    }
     // 渲染子弹
     render_bullets();
     // 渲染敌机
@@ -132,6 +135,7 @@ void Scene_main::update(float delta_time)
     spawn_enemy();
     update_enemies(delta_time);
     update_enemy_bullets(delta_time);
+    update_player(delta_time);
 }
 void Scene_main::handle_event(SDL_Event* event)
 {
@@ -140,6 +144,7 @@ void Scene_main::handle_event(SDL_Event* event)
 // 键盘控制
 void Scene_main::keyboard_control(float delta_time)
 {
+    if(is_dead) return;
     auto keyboard_state = SDL_GetKeyboardState(NULL);
     // 控制玩家移动
     if(keyboard_state[SDL_SCANCODE_LSHIFT])
@@ -210,7 +215,14 @@ void Scene_main::shoot(Enemy* enemy)
     bullet_enemy->direction = get_direction(enemy);
     enemy_bullets.push_back(bullet_enemy);
 }
-
+void Scene_main::update_player(float delta_time)
+{
+    if(is_dead) return;
+    if(player->current_health <= 0)
+    {
+        is_dead = true;
+    }
+}
 void Scene_main::update_bullets(float delta_time)
 {
     int margin = 32;
@@ -274,7 +286,15 @@ void Scene_main::update_enemy_bullets(float delta_time)
             it = enemy_bullets.erase(it);
         }
         else{
-            ++it;
+            SDL_Rect player_rect = {static_cast<int>(player->postion.x),static_cast<int>(player->postion.y),player->width,player->height};
+            SDL_Rect bullet_rect = {static_cast<int>(bullet->position.x),static_cast<int>(bullet->position.y),bullet->width,bullet->height};
+            if(SDL_HasIntersection(&player_rect,&bullet_rect) && !is_dead)
+            {
+                player->current_health -= bullet->damage;
+                delete bullet;
+                it = enemy_bullets.erase(it);
+            }
+            else ++it;
         }
     }
 }
@@ -305,7 +325,7 @@ void Scene_main::spawn_enemy()
         monster->postion.x = dis(gen) * (game.get_window_width() - monster->width);
         monster->postion.y = - monster->height;
         monster->speed = monster->speed/2.0 +(monster->speed/2.0) * dis(gen);
-        monster->cool_down = 390;
+        monster->cool_down = 1500;
         monster->current_health = 3;
         monsters.push_back(monster);
     }
@@ -321,17 +341,24 @@ void Scene_main::spawn_enemy()
 void Scene_main::update_enemies(float delta_time)
 {
     auto current_time = SDL_GetTicks();
+    SDL_Rect player_rect = {static_cast<int>(player->postion.x),static_cast<int>(player->postion.y),player->width,player->height};
     for(auto it = enemies.begin();it != enemies.end();)
     {
         auto enemy = *it;
         enemy->postion.y += enemy->speed * delta_time;
+        SDL_Rect enemy_rect = {static_cast<int>(enemy->postion.x),static_cast<int>(enemy->postion.y),enemy->width,enemy->height};
+        if(SDL_HasIntersection(&enemy_rect,&player_rect)  && !is_dead)
+        {
+            player->current_health -= 1;
+            enemy->current_health = 0;
+        }
         if(enemy->postion.y > game.get_window_height()){
             delete enemy;
             it = enemies.erase(it);
         }
         else 
         {
-            if(current_time - enemy->last_shot_time > enemy->cool_down)
+            if(current_time - enemy->last_shot_time > enemy->cool_down && !is_dead)
             {
                 shoot(enemy);
                 enemy->last_shot_time = current_time;
@@ -351,6 +378,12 @@ void Scene_main::update_enemies(float delta_time)
     {
         auto monster = *it;
         monster->postion.y += monster->speed * delta_time;
+        SDL_Rect monster_rect = {static_cast<int>(monster->postion.x),static_cast<int>(monster->postion.y),monster->width,monster->height};
+        if(SDL_HasIntersection(&monster_rect,&player_rect) && !is_dead)
+        {
+            monster->current_health = 0;
+            player->current_health -=1;
+        }
         if(monster->postion.y > game.get_window_height())
         {
             delete monster;
@@ -358,7 +391,7 @@ void Scene_main::update_enemies(float delta_time)
         }
         else
         {
-            if(current_time - monster->last_shot_time > monster->cool_down)
+            if(current_time - monster->last_shot_time > monster->cool_down && !is_dead)
             {
                 shoot(monster);
                 monster->last_shot_time = current_time;
