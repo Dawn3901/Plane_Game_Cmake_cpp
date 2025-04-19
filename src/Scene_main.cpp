@@ -5,7 +5,7 @@
 #include <chrono>
 #include <random>
 const float pi = 3.14159f;
-
+const float drop_possibility = 0.5f;
 Scene_main::Scene_main():game(Game::get_instance()),player(new Player())
 {
 
@@ -59,7 +59,19 @@ void Scene_main::init()
     SDL_QueryTexture(template_explosion.texture,NULL,NULL,&template_explosion.width,&template_explosion.height);
     template_explosion.total_frame = template_explosion.width/template_explosion.height;
     template_explosion.width = template_explosion.height;
-
+    // 加载道具的模板
+    template_life_item.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/bonus_life.png");
+    SDL_QueryTexture(template_life_item.texture,NULL,NULL,&template_life_item.width,&template_life_item.height);
+    template_life_item.width /= 4;
+    template_life_item.height /= 4;
+    template_time_item.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/bonus_time.png");
+    SDL_QueryTexture(template_time_item.texture,NULL,NULL,&template_time_item.width,&template_time_item.height);
+    template_time_item.width /=4;
+    template_time_item.height /=4;
+    template_shield_item.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/bonus_shield.png");
+    SDL_QueryTexture(template_shield_item.texture,NULL,NULL,&template_shield_item.width,&template_shield_item.height);
+    template_shield_item.width /=4;
+    template_shield_item.height /=4;
 }
 void Scene_main::clean()
 {
@@ -123,6 +135,27 @@ void Scene_main::clean()
     {
         SDL_DestroyTexture(template_enemy_bullet.texture);
     }
+    // 清理道具
+    for(auto& item : items)
+    {
+        if(item != nullptr)
+        {
+            delete item;
+        }
+    }
+    items.clear();
+    if(template_life_item.texture != nullptr)
+    {
+        SDL_DestroyTexture(template_life_item.texture);
+    }
+    if(template_time_item.texture != nullptr)
+    {
+        SDL_DestroyTexture(template_time_item.texture);
+    }
+    if(template_shield_item.texture != nullptr)
+    {
+        SDL_DestroyTexture(template_shield_item.texture);
+    }
 }
 void Scene_main::render()
 {
@@ -136,6 +169,8 @@ void Scene_main::render()
     render_bullets();
     // 渲染敌机
     render_enemies();
+    // 渲染道具
+    render_item();
     // 渲染爆炸特性
     render_explosion();
 }
@@ -148,6 +183,7 @@ void Scene_main::update(float delta_time)
     update_enemy_bullets(delta_time);
     update_player(delta_time);
     update_explosion(delta_time);
+    update_item(delta_time);
 }
 void Scene_main::handle_event(SDL_Event* event)
 {
@@ -334,6 +370,62 @@ void Scene_main::update_explosion(float delta_time)
     }
 }
 
+void Scene_main::update_item(float delta_time)
+{
+    for(auto it = items.begin();it != items.end();)
+    {
+        auto item = *it;
+        item->postion.x += item->speed * item->direction.x * delta_time;
+        item->postion.y += item->speed * item->direction.y * delta_time;
+        if(item->bounce_count > 0)
+        {
+            if(item->postion.x < 0 || item->postion.x + item->width > game.get_window_width() > 0)
+            {
+                item->direction.x = - item->direction.x;
+                item->bounce_count --;
+            }
+            else if(item->postion.y < 0 || item->postion.y + item->height > game.get_window_height())
+            {
+                item->direction.y = - item->direction.y;
+                item->bounce_count --;
+            }
+        }
+        if(item->postion.x + item->width < 0 || item->postion.x > game.get_window_width() || item->postion.y + item->height < 0 || item->postion.y > game.get_window_height())
+        {
+            delete item;
+            it = items.erase(it);
+        }
+        else
+        {
+            SDL_Rect item_rect = {static_cast<int>(item->postion.x),static_cast<int>(item->postion.y),item->width,item->height};
+            SDL_Rect player_rect = {static_cast<int>(player->postion.x),static_cast<int>(player->postion.y),player->width,player->height};
+            if(SDL_HasIntersection(&item_rect,&player_rect) && !is_dead)
+            {
+                player_get_item(item);
+                delete item;
+                it = items.erase(it);
+            }
+            else ++it;
+        }
+    }    
+}
+
+void Scene_main::player_get_item(Item* item)
+{
+    if(item->type == item_type::Life)
+    {
+        player->current_health = player->current_health <= player->max_health ? player->current_health + 1 : player->max_health;
+    }
+    else if(item->type == item_type::Time)
+    {
+
+    }
+    else if(item->type == item_type::Shield)
+    {
+        
+    }
+}
+
 void Scene_main::render_bullets()
 {
     // 渲染玩家子弹
@@ -470,9 +562,35 @@ void Scene_main::enemy_explode(Enemy* enemy)
     explosion->postion.y = enemy->postion.y + enemy->height/2 - explosion->height/2;
     explosion->start_time = current_time;
     explosions.push_back(explosion);
+    if(dis(gen) > drop_possibility)
+    {
+        if(dis(gen) < drop_possibility/3) item_drop(enemy,item_type::Life);
+        else if(dis(gen) > drop_possibility * 2 /3) item_drop(enemy,item_type::Shield);
+        else item_drop(enemy,item_type::Time);
+    }
     delete enemy;
 }
-
+void Scene_main::item_drop(Enemy* enemy,item_type drop_type)
+{
+    Item* item = nullptr;
+    if(drop_type == item_type::Life) item = new Item(template_life_item);
+    else if(drop_type == item_type::Time) item = new Item(template_time_item);
+    else if(drop_type == item_type::Shield) item = new Item(template_shield_item);
+    item->postion.x = enemy->postion.x + enemy->width/2 - item->width/2;
+    item->postion.y = enemy->postion.y + enemy->height/2 - item->height/2;
+    float angle = dis(gen) * 2 * pi;
+    item->direction.x = cos(angle);
+    item->direction.y = sin(angle);
+    items.push_back(item);
+}
+void Scene_main::render_item()
+{
+    for(auto item : items)
+    {
+        SDL_Rect item_rect = {static_cast<int>(item->postion.x),static_cast<int>(item->postion.y),item->width,item->height};
+        SDL_RenderCopy(game.get_renderer(),item->texture,NULL,&item_rect);
+    }
+}
 void Scene_main::render_explosion()
 {
     for(auto explosion : explosions)

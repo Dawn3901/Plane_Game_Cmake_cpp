@@ -31,6 +31,10 @@ public:
     void render_enemies();
     void enemy_explode(Enemy*);
     SDL_FPoint get_direction(Enemy*);
+    void item_drop(Enemy*,item_type);
+    void update_item(float);
+    void player_get_item(Item*);
+    void render_item();
 private:
     Game& game;
     Player* player;
@@ -47,5 +51,9 @@ private:
     std::list<Enemy_Bullet*> enemy_bullets;
     Explosion template_explosion;
     std::list<Explosion*> explosions;
+    Item template_life_item;
+    Item template_time_item;
+    Item template_shield_item;
+    std::list<Item*> items;
 };
 
