@@ -17,13 +17,26 @@ Scene_main::~Scene_main()
 }
 void Scene_main::init()
 {
+    // 加载音乐
+    bgm = Mix_LoadMUS("assets/music/03_Racing_Through_Asteroids_Loop.ogg");
+    if(bgm == nullptr)
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,"Failed to load music! %s\n",Mix_GetError());
+    }
+    Mix_PlayMusic(bgm,-1);
+    sounds["player_shoot"] = Mix_LoadWAV("assets/sound/laser_shoot4.wav");
+    sounds["enemy_shoot"] = Mix_LoadWAV("assets/sound/xs_laser.wav");
+    sounds["player_explosion"] = Mix_LoadWAV("assets/sound/explosion1.wav");
+    sounds["enemy_explosion"] = Mix_LoadWAV("assets/sound/explosion3.wav");
+    sounds["get_item"] = Mix_LoadWAV("assets/sound/eff5.wav");
+    sounds["hit"] = Mix_LoadWAV("assets/sound/eff11.wav");
     // 生成随机数
     std::random_device rd;// 生成随机数种子
     gen = std::mt19937(rd());// 生成随机数引擎
     dis = std::uniform_real_distribution<float>(0.0f,1.0f);// 指定随机分布
     //auto r = dis(gen); // 获取随机数
 
-    //加载玩家的材质
+    // 加载玩家的材质
     player->texture = IMG_LoadTexture(game.get_renderer(),"assets/image/SpaceShip.png");
     if(player->texture == nullptr)
     {
@@ -156,6 +169,20 @@ void Scene_main::clean()
     {
         SDL_DestroyTexture(template_shield_item.texture);
     }
+    // 清理音乐
+    if(bgm != nullptr)
+    {
+        Mix_HaltMusic();
+        Mix_FreeMusic(bgm);
+    }
+    for(auto sound : sounds)
+    {
+        if(sound.second != nullptr)
+        {
+            Mix_FreeChunk(sound.second);
+        }
+    }
+    sounds.clear();
 }
 void Scene_main::render()
 {
@@ -242,6 +269,7 @@ void Scene_main::shoot()
     bullet_player->position.x = player->postion.x + player->width/2 - bullet_player->width/2;
     bullet_player->position.y = player->postion.y;
     bullets.push_back(bullet_player);
+    Mix_PlayChannel(0,sounds["player_shoot"],0);
 }
 void Scene_main::double_shoot()
 {
@@ -253,6 +281,7 @@ void Scene_main::double_shoot()
     bullet_player_2->position.x = player->postion.x + player->width/2 - bullet_player_2->width/2 + 10;
     bullet_player_2->position.y = player->postion.y;
     bullets.push_back(bullet_player_2);
+    Mix_PlayChannel(0,sounds["player_shoot"],0);
 }
 
 void Scene_main::shoot(Enemy* enemy)
@@ -262,6 +291,7 @@ void Scene_main::shoot(Enemy* enemy)
     bullet_enemy->position.y = enemy->postion.y + enemy->height;
     bullet_enemy->direction = get_direction(enemy);
     enemy_bullets.push_back(bullet_enemy);
+    Mix_PlayChannel(-1,sounds["enemy_shoot"],0);
 }
 void Scene_main::update_player(float delta_time)
 {
@@ -274,6 +304,7 @@ void Scene_main::update_player(float delta_time)
         explosion->postion.y = player->postion.y + player->height/2 - explosion->height/2;
         explosion->start_time = current_time;
         explosions.push_back(explosion);
+        Mix_PlayChannel(-1,sounds["player_explosion"],0);
         is_dead = true;
         return;
     }
@@ -300,6 +331,7 @@ void Scene_main::update_bullets(float delta_time)
                 if(SDL_HasIntersection(&bullet_rect,&enemy_rect))
                 {
                     enemy->current_health -= bullet->damage;
+                    Mix_PlayChannel(-1,sounds["hit"],0);
                     delete bullet;
                     it = bullets.erase(it);
                     hit = true;
@@ -313,6 +345,7 @@ void Scene_main::update_bullets(float delta_time)
                 if(SDL_HasIntersection(&bullet_rect,&monster_rect))
                 {
                     monster->current_health -= bullet->damage;
+                    Mix_PlayChannel(-1,sounds["hit"],0);
                     delete bullet;
                     it = bullets.erase(it);
                     hit = true;
@@ -345,6 +378,7 @@ void Scene_main::update_enemy_bullets(float delta_time)
             SDL_Rect bullet_rect = {static_cast<int>(bullet->position.x),static_cast<int>(bullet->position.y),bullet->width,bullet->height};
             if(SDL_HasIntersection(&player_rect,&bullet_rect) && !is_dead)
             {
+                Mix_PlayChannel(-1,sounds["hit"],0);
                 player->current_health -= bullet->damage;
                 delete bullet;
                 it = enemy_bullets.erase(it);
@@ -422,8 +456,9 @@ void Scene_main::player_get_item(Item* item)
     }
     else if(item->type == item_type::Shield)
     {
-        
+
     }
+    Mix_PlayChannel(-1,sounds["get_item"],0);
 }
 
 void Scene_main::render_bullets()
@@ -562,6 +597,7 @@ void Scene_main::enemy_explode(Enemy* enemy)
     explosion->postion.y = enemy->postion.y + enemy->height/2 - explosion->height/2;
     explosion->start_time = current_time;
     explosions.push_back(explosion);
+    Mix_PlayChannel(-1,sounds["enemy_explosion"],0);
     if(dis(gen) > drop_possibility)
     {
         if(dis(gen) < drop_possibility/3) item_drop(enemy,item_type::Life);

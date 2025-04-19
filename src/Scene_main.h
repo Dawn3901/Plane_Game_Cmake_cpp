@@ -1,8 +1,10 @@
 #pragma once
 #include "Object.h"
 #include "Scene.h"
+#include <SDL_mixer.h>
 #include <list>
 #include <random>
+#include <map>
 
 class Game;
 
@@ -38,6 +40,7 @@ public:
 private:
     Game& game;
     Player* player;
+    Mix_Music* bgm;
     bool is_dead = false;
     std::mt19937 gen;
     std::uniform_real_distribution<float> dis;
@@ -55,5 +58,6 @@ private:
     Item template_time_item;
     Item template_shield_item;
     std::list<Item*> items;
+    std::map<std::string,Mix_Chunk*> sounds; 
 };
 

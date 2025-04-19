@@ -1,6 +1,8 @@
 #include "Game.h"
 #include "Scene_main.h"
 #include <SDL_image.h>
+#include <SDL_mixer.h>
+#include <SDL_ttf.h>
 #include <iostream>
 Game::~Game()
 {
@@ -35,6 +37,21 @@ void Game::init()
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,"IMG could not initialize! iMG error: %s\n",IMG_GetError());
         Is_running = false;
     }
+    // 初始化 音频
+    if(Mix_Init(MIX_INIT_MP3 | MIX_INIT_OGG) != (MIX_INIT_MP3 | MIX_INIT_OGG))
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,"MIX could not initialize! MIX error: %s\n",Mix_GetError());
+        Is_running = false;
+    }
+    if(Mix_OpenAudio(44100,MIX_DEFAULT_FORMAT,2,2048) < 0)
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,"MIX could not initialize! MIX error: %s\n",Mix_GetError());
+        Is_running = false;
+    }
+    Mix_AllocateChannels(16);
+    Mix_VolumeMusic(MIX_MAX_VOLUME / 4);
+    Mix_Volume(-1,MIX_MAX_VOLUME /4);
+    // 初始化 文字
     // 新建并初始化场景
     current_scene = new Scene_main();
     current_scene->init();
@@ -47,6 +64,9 @@ void Game::clean()
         delete current_scene;
     }
     IMG_Quit();
+     
+    Mix_CloseAudio();
+    Mix_Quit();
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
