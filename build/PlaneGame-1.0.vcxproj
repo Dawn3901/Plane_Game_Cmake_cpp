@@ -126,7 +126,7 @@
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImportLibrary>D:/GCC/code/Cmake/Cmake_Game/build/Debug/PlaneGame-1.0.lib</ImportLibrary>
       <ProgramDataBaseFile>D:/GCC/code/Cmake/Cmake_Game/PlaneGame-1.0.pdb</ProgramDataBaseFile>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -175,7 +175,7 @@
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImportLibrary>D:/GCC/code/Cmake/Cmake_Game/build/Release/PlaneGame-1.0.lib</ImportLibrary>
       <ProgramDataBaseFile>D:/GCC/code/Cmake/Cmake_Game/PlaneGame-1.0.pdb</ProgramDataBaseFile>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -224,7 +224,7 @@
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImportLibrary>D:/GCC/code/Cmake/Cmake_Game/build/MinSizeRel/PlaneGame-1.0.lib</ImportLibrary>
       <ProgramDataBaseFile>D:/GCC/code/Cmake/Cmake_Game/build/MinSizeRel/PlaneGame-1.0.pdb</ProgramDataBaseFile>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -272,7 +272,7 @@
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImportLibrary>D:/GCC/code/Cmake/Cmake_Game/build/RelWithDebInfo/PlaneGame-1.0.lib</ImportLibrary>
       <ProgramDataBaseFile>D:/GCC/code/Cmake/Cmake_Game/build/RelWithDebInfo/PlaneGame-1.0.pdb</ProgramDataBaseFile>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>

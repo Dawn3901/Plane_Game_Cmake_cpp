@@ -14,6 +14,7 @@
 		"commands" : 
 		[
 			"add_executable",
+			"target_link_options",
 			"target_link_libraries",
 			"add_compile_options",
 			"include_directories"
@@ -36,17 +37,23 @@
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 26,
+				"line" : 35,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 12,
+				"line" : 26,
 				"parent" : 0
 			},
 			{
 				"command" : 3,
+				"file" : 0,
+				"line" : 12,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
 				"file" : 0,
 				"line" : 22,
 				"parent" : 0
@@ -62,18 +69,18 @@
 					"fragment" : "/DWIN32 /D_WINDOWS /W3 /GR /EHsc /MD /O1 /Ob1 /DNDEBUG -std:c++17"
 				},
 				{
-					"backtrace" : 3,
+					"backtrace" : 4,
 					"fragment" : "/W4"
 				},
 				{
-					"backtrace" : 3,
+					"backtrace" : 4,
 					"fragment" : "/source-charset:utf-8"
 				}
 			],
 			"includes" : 
 			[
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"isSystem" : true,
 					"path" : "D:/GCC/Library/SDL2/cmake/../include"
 				}
@@ -119,26 +126,31 @@
 			},
 			{
 				"backtrace" : 2,
+				"fragment" : "/SUBSYSTEM:WINDOWS",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 3,
 				"fragment" : "D:\\GCC\\Library\\SDL2\\cmake\\..\\lib\\x64\\SDL2main.lib",
 				"role" : "libraries"
 			},
 			{
-				"backtrace" : 2,
+				"backtrace" : 3,
 				"fragment" : "D:\\GCC\\Library\\SDL2\\cmake\\..\\lib\\x64\\SDL2.lib",
 				"role" : "libraries"
 			},
 			{
-				"backtrace" : 2,
+				"backtrace" : 3,
 				"fragment" : "D:\\GCC\\Library\\SDL2\\cmake\\..\\lib\\x64\\SDL2_image.lib",
 				"role" : "libraries"
 			},
 			{
-				"backtrace" : 2,
+				"backtrace" : 3,
 				"fragment" : "D:\\GCC\\Library\\SDL2\\cmake\\..\\lib\\x64\\SDL2_ttf.lib",
 				"role" : "libraries"
 			},
 			{
-				"backtrace" : 2,
+				"backtrace" : 3,
 				"fragment" : "D:\\GCC\\Library\\SDL2\\cmake\\..\\lib\\x64\\SDL2_mixer.lib",
 				"role" : "libraries"
 			},
