@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "Scene_main.h"
+#include "Scene_title.h"
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
@@ -57,6 +58,13 @@ void Game::init()
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,"TTF could not initialize! TTF error: %s\n",SDL_GetError());
         Is_running = false;
     }
+    title_font = TTF_OpenFont("assets/font/VonwaonBitmap-16px.ttf",64);
+    text_font = TTF_OpenFont("assets/font/VonwaonBitmap-16px.ttf",32);
+    if(title_font == nullptr || text_font == nullptr)
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,"Failed to load font! TTF error: %s\n",TTF_GetError());
+    }
+
     // 初始化背景卷轴
     near_stars.texture = IMG_LoadTexture(renderer,"assets/image/Stars-A.png");
     SDL_QueryTexture(near_stars.texture,NULL,NULL,&near_stars.width,&near_stars.height); 
@@ -66,8 +74,12 @@ void Game::init()
     SDL_QueryTexture(far_stars.texture,NULL,NULL,&far_stars.width,&far_stars.height);
     far_stars.width /= 2;
     far_stars.height /= 2;
+    if(near_stars.texture == nullptr || far_stars.texture == nullptr)
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,"Failed to load background texture! IMG error: %s\n",IMG_GetError());
+    }
     // 新建并初始化场景
-    current_scene = new Scene_main();
+    current_scene = new Scene_title();
     current_scene->init();
 }
 void Game::clean()
@@ -85,6 +97,15 @@ void Game::clean()
     {
         SDL_DestroyTexture(far_stars.texture);
     }
+    if(title_font != nullptr)
+    {
+        TTF_CloseFont(title_font);
+    }
+    if(text_font != nullptr)
+    {
+        TTF_CloseFont(text_font);
+    }
+
     IMG_Quit();
      
     Mix_CloseAudio();
@@ -188,4 +209,14 @@ void Game::render_background()
             SDL_RenderCopy(renderer,near_stars.texture,nullptr,&dst_rect);
         }
     }
+}
+void Game::render_text_center(std::string& text,float y,TTF_Font* font)
+{
+    SDL_Color text_color = {255,255,255,255};
+    SDL_Surface* surface = TTF_RenderText_Solid(font,text.c_str(),text_color);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer,surface);
+    SDL_Rect text_rect = {window_width/2 - surface->w/2,static_cast<int>((window_width - surface->h) * y),surface->w,surface->h};
+    SDL_RenderCopy(renderer,texture,NULL,&text_rect);
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
 }

@@ -1,10 +1,11 @@
 #pragma once
-#include<SDL.h>
+#include <SDL.h>
+class Game;
 
 class Scene
 {
 public:
-    Scene() = default;
+    Scene();
     virtual ~Scene() = default;
     virtual void init() = 0;
     virtual void clean() = 0;
@@ -13,4 +14,6 @@ public:
     virtual void handle_event(SDL_Event* event) = 0;
 private:
     
+protected:
+    Game& game;
 };

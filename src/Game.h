@@ -2,6 +2,8 @@
 #include "Scene.h"
 #include "Object.h"
 #include <SDL.h>
+#include <SDL_ttf.h>
+#include <SDL_image.h>
 #include <chrono>
 class Game
 {
@@ -20,8 +22,11 @@ public:
     void render_background();
     void update(float);
     void render();
+    void render_text_center(std::string&,float,TTF_Font*);
     SDL_Window* get_window() { return window;}
     SDL_Renderer* get_renderer() { return renderer;}
+    TTF_Font* get_title_font() { return title_font;}
+    TTF_Font* get_text_font() { return text_font;}
     int get_window_width();
     int get_window_height();
 private:
@@ -41,4 +46,6 @@ private:
     float delta_time;
     Background near_stars;
     Background far_stars;
+    TTF_Font* title_font;
+    TTF_Font* text_font;
 };

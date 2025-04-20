@@ -21,7 +21,7 @@ find_package(SDL2_ttf REQUIRED)
 find_package(SDL2_mixer REQUIRED) 
 include_directories(${SDL2_INCLUDE_DIRS})
 
-add_executable(${TARGET} "src/main.cpp" "src/Game.cpp" "src/Scene_main.cpp")
+add_executable(${TARGET} "src/main.cpp" "src/Game.cpp" "src/Scene_main.cpp" "src/Scene_title.cpp" "src/Scene.cpp")
 
 target_link_libraries(${TARGET} 
     ${SDL2_LIBRARIES}

@@ -1,4 +1,5 @@
 #include "Scene_main.h"
+#include "Scene_title.h"
 #include "Game.h"
 #include <SDL.h>
 #include <SDL_image.h>
@@ -8,7 +9,7 @@
 
 const float pi = 3.14159f;
 const float drop_possibility = 0.5f;
-Scene_main::Scene_main():game(Game::get_instance()),player(new Player())
+Scene_main::Scene_main():player(new Player())
 {
 
 }
@@ -235,7 +236,14 @@ void Scene_main::update(float delta_time)
 }
 void Scene_main::handle_event(SDL_Event* event)
 {
-    
+    if(event->type == SDL_KEYDOWN)
+    {
+        if(event->key.keysym.scancode == SDL_SCANCODE_ESCAPE)
+        {
+            Scene_title* scene_title = new Scene_title();
+            game.change_scene(scene_title);
+        }
+    }
 }
 // 键盘控制
 void Scene_main::keyboard_control(float delta_time)

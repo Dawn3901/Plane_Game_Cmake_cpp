@@ -40,7 +40,6 @@ public:
     void player_get_item(Item*);
     void render_item();
 private:
-    Game& game;
     Player* player;
     Mix_Music* bgm;
     SDL_Texture* health_ui;

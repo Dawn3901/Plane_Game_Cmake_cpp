@@ -57,6 +57,10 @@
         "sstream": "cpp",
         "string": "cpp",
         "vector": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "algorithm": "cpp",
+        "list": "cpp",
+        "map": "cpp",
+        "xtree": "cpp"
     }
 }
