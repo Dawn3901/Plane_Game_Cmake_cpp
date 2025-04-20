@@ -47,8 +47,8 @@ void Scene_main::init()
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,"Failed to load player texture: %s\n",SDL_GetError());
     }
     SDL_QueryTexture(player->texture,NULL,NULL,&player->width,&player->height);
-    player->height/=4;
-    player->width/=4;
+    player->height/=5;
+    player->width/=5;
     player->postion.x = game.get_window_width() / 2 - player->width / 2;
     player->postion.y = game.get_window_height() - player->height;
     // 加载生命值ui材质
@@ -78,6 +78,7 @@ void Scene_main::init()
     template_explosion.texture = IMG_LoadTexture(game.get_renderer(),"assets/effect/explosion.png");
     SDL_QueryTexture(template_explosion.texture,NULL,NULL,&template_explosion.width,&template_explosion.height);
     template_explosion.total_frame = template_explosion.width/template_explosion.height;
+    template_explosion.height *= 2;
     template_explosion.width = template_explosion.height;
     // 加载道具的模板
     template_life_item.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/bonus_life.png");
@@ -697,7 +698,7 @@ void Scene_main::render_explosion()
 {
     for(auto explosion : explosions)
     {
-        SDL_Rect explosion_src = {explosion->current_frame * explosion->width,0,explosion->width,explosion->width};
+        SDL_Rect explosion_src = {explosion->current_frame * explosion->width,0,explosion->width / 2,explosion->width / 2};
         SDL_Rect explosion_dst = {static_cast<int>(explosion->postion.x),static_cast<int>(explosion->postion.y),explosion->width,explosion->height};
         SDL_RenderCopy(game.get_renderer(),explosion->texture,&explosion_src,&explosion_dst);
     }

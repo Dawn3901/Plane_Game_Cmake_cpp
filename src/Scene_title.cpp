@@ -15,7 +15,11 @@ void Scene_title::init()
 
 void Scene_title::clean()
 {
-
+    if(bgm != nullptr)
+    {
+        Mix_HaltMusic();
+        Mix_FreeMusic(bgm);
+    }
 }
 
 void Scene_title::handle_event(SDL_Event* event)

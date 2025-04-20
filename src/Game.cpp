@@ -7,6 +7,7 @@
 #include <iostream>
 Game::~Game()
 {
+    save_data();
     clean();
 }
 void Game::init()
@@ -32,6 +33,9 @@ void Game::init()
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,"Renderer could not be created! SDL error: %s\n",SDL_GetError());
         Is_running = false;
     }
+    // 设置逻辑分辨率
+    SDL_RenderSetLogicalSize(renderer,window_width,window_height);
+
     // 初始化 图片
     if(IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) != (IMG_INIT_JPG | IMG_INIT_PNG))
     {
@@ -78,6 +82,8 @@ void Game::init()
     {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,"Failed to load background texture! IMG error: %s\n",IMG_GetError());
     }
+    // 加载数据
+    load_data();
     // 新建并初始化场景
     current_scene = new Scene_title();
     current_scene->init();
@@ -154,6 +160,21 @@ void Game::handle_event(SDL_Event* event)
         {
             Is_running = false;
         }
+        if(event->type == SDL_KEYDOWN)
+        {
+            if(event->key.keysym.scancode == SDL_SCANCODE_F4)
+            {
+                Is_fullscreen = !Is_fullscreen;
+                if(Is_fullscreen)
+                {
+                    SDL_SetWindowFullscreen(window,SDL_WINDOW_FULLSCREEN);
+                }
+                else
+                {
+                    SDL_SetWindowFullscreen(window,0);
+                }
+            }
+        }
         current_scene->handle_event(event);
     }
 }
@@ -221,14 +242,59 @@ SDL_Point Game::render_text_center(std::string& text,float y,TTF_Font* font)
     SDL_DestroyTexture(texture);
     return {text_rect.x + text_rect.w, static_cast<int>((window_width - surface->h) * y)};
 }
-SDL_Point Game::render_text(std::string& text,int x,int y,TTF_Font* font)
+SDL_Point Game::render_text(std::string& text,int x,int y,TTF_Font* font,bool is_left)
 {
     SDL_Color text_color = {255,255,255,255};
     SDL_Surface* surface = TTF_RenderText_Solid(font,text.c_str(),text_color);
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer,surface);
-    SDL_Rect text_rect = {x,y,surface->w,surface->h};
+    SDL_Rect text_rect;
+    if(is_left)
+    {
+        text_rect = {x,y,surface->w,surface->h};
+    }
+    else 
+    {
+        text_rect = {get_window_width() - x - surface->w,y,surface->w,surface->h};
+    }
     SDL_RenderCopy(renderer,texture,NULL,&text_rect);
     SDL_FreeSurface(surface);
     SDL_DestroyTexture(texture);
     return {text_rect.x + text_rect.w,y};
+}
+void Game::insert_leader_board(int score,std::string& name)
+{
+    leader_board.insert({score,name});
+    if(leader_board.size() > 8)
+    {
+        leader_board.erase(--leader_board.end());
+    }
+}
+void Game::save_data()
+{
+    std::ofstream file("assets/save.dat");
+    if(!file.is_open())
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,"Failed to open file.");
+        return;
+    }
+    for(const auto& entry : leader_board)
+    {
+        file << entry.first <<" "<<entry.second<<std::endl;
+    }
+}
+void Game::load_data()
+{
+    std::ifstream file("assets/save.dat");
+    if(!file.is_open())
+    {
+        SDL_Log("Failed to open file.");
+        return;
+    }
+    leader_board.clear();
+    std::string name;
+    int score;
+    while(file >> score >> name)
+    {
+        leader_board.insert({score,name});
+    }
 }

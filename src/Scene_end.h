@@ -1,5 +1,6 @@
 #include "Scene.h"
 #include "Game.h"
+#include <SDL_mixer.h>
 
 class Game;
 class Scene_end : public Scene
@@ -18,4 +19,5 @@ private:
     bool is_typing = true;
     std::string name = "";
     float blink_timer = 1.0f;
+    Mix_Music* bgm;
 };

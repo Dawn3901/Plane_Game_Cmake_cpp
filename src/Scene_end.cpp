@@ -1,16 +1,23 @@
 #include "Scene_end.h"
+#include "Scene_main.h"
 #include <string>
 #include <iostream>
 void Scene_end::init()
 {
-    if(SDL_IsTextInputActive())
+    bgm = Mix_LoadMUS("assets/music/06_Battle_in_Space_Intro.ogg");
+    if(bgm != nullptr)
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,"Failed to load music. Mixer Error: %s\n",Mix_GetError());
+    }
+    Mix_PlayMusic(bgm,-1);
+    if(!SDL_IsTextInputActive())
     {
         SDL_StartTextInput();
         if(SDL_IsTextInputActive())
         {
             SDL_LogError(SDL_LOG_CATEGORY_ERROR,"Failed to open the text_input. SDL Error: %s\n",SDL_GetError());
         }
-
+        is_typing = true;
     }
 }
 void Scene_end::render()
@@ -26,7 +33,11 @@ void Scene_end::render()
 }
 void Scene_end::clean()
 {
-
+    if(bgm != nullptr)
+    {
+        Mix_HaltMusic();
+        Mix_FreeMusic(bgm);
+    }
 }
 void Scene_end::update(float delta_time)
 {
@@ -50,6 +61,11 @@ void Scene_end::handle_event(SDL_Event* event)
             {
                 is_typing = false;
                 SDL_StopTextInput();
+                if(name == "")
+                {
+                    name = "anonymous";
+                }
+                game.insert_leader_board(game.get_final_score(),name);
             }
             if(event->key.keysym.scancode == SDL_SCANCODE_BACKSPACE)
             {
@@ -59,7 +75,14 @@ void Scene_end::handle_event(SDL_Event* event)
     }
     else
     {
-
+        if(event->type == SDL_KEYDOWN)
+        {
+            if(event->key.keysym.scancode == SDL_SCANCODE_L)
+            {
+                auto scene_main = new Scene_main();
+                game.change_scene(scene_main);
+            }
+        }
     }
 }
 void Scene_end::render_phase_1()
@@ -90,5 +113,22 @@ void Scene_end::render_phase_1()
 }
 void Scene_end::render_phase_2()
 {
-
+    std::string leader_board = "leader_board";
+    game.render_text_center(leader_board,0.1f,game.get_title_font());
+    int index = 1;
+    float y = 0.2f * game.get_window_height();
+    for(auto item : game.get_leader_board())
+    {
+        std::string name = std::to_string(index) + ". " + item.second;
+        std::string score = std::to_string(item.first);
+        game.render_text(name,150,y,game.get_text_font());
+        game.render_text(score,150,y,game.get_text_font(),false);
+        y += 50;
+        ++index;
+    }
+    std::string end = "Press L to restart";
+    if(blink_timer < 0.5f)
+    {
+        game.render_text_center(end,1.0f,game.get_text_font());
+    }
 }
