@@ -70,3 +70,12 @@ struct Item
     int bounce_count = 3;
     item_type type = item_type::Life;
 };
+struct Background
+{
+    SDL_Texture* texture = nullptr;
+    SDL_FPoint postion = {0,0};
+    float offset = 0;
+    int width = 0;
+    int height = 0;
+    int speed = 50;
+};

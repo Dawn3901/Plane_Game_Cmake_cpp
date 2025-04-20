@@ -52,6 +52,20 @@ void Game::init()
     Mix_VolumeMusic(MIX_MAX_VOLUME / 4);
     Mix_Volume(-1,MIX_MAX_VOLUME /4);
     // 初始化 文字
+    if(TTF_Init() == -1)
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,"TTF could not initialize! TTF error: %s\n",SDL_GetError());
+        Is_running = false;
+    }
+    // 初始化背景卷轴
+    near_stars.texture = IMG_LoadTexture(renderer,"assets/image/Stars-A.png");
+    SDL_QueryTexture(near_stars.texture,NULL,NULL,&near_stars.width,&near_stars.height); 
+    near_stars.width /= 2;
+    near_stars.height /= 2;
+    far_stars.texture = IMG_LoadTexture(renderer,"assets/image/Stars-B.png");
+    SDL_QueryTexture(far_stars.texture,NULL,NULL,&far_stars.width,&far_stars.height);
+    far_stars.width /= 2;
+    far_stars.height /= 2;
     // 新建并初始化场景
     current_scene = new Scene_main();
     current_scene->init();
@@ -63,11 +77,20 @@ void Game::clean()
         current_scene->clean();
         delete current_scene;
     }
+    if(near_stars.texture != nullptr)
+    {
+        SDL_DestroyTexture(near_stars.texture);
+    }
+    if(far_stars.texture != nullptr)
+    {
+        SDL_DestroyTexture(far_stars.texture);
+    }
     IMG_Quit();
      
     Mix_CloseAudio();
     Mix_Quit();
 
+    TTF_Quit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -115,11 +138,13 @@ void Game::handle_event(SDL_Event* event)
 }
 void Game::update(float delta_time)
 {
+    update_background(delta_time);
     current_scene->update(delta_time);
 }
 void Game::render()
 {
     SDL_RenderClear(renderer);
+    render_background();
     current_scene->render();
     SDL_RenderPresent(renderer);
 }
@@ -130,4 +155,37 @@ int Game::get_window_width()
 int Game::get_window_height()
 {
     return window_height;
+}
+void Game::update_background(float delta_time)
+{
+    near_stars.offset += near_stars.speed * delta_time;
+    if(near_stars.offset >= 0)
+    {
+        near_stars.offset -= near_stars.height;
+    }
+
+    far_stars.offset += far_stars.speed * delta_time;
+    if(far_stars.offset >= 0)
+    {
+        far_stars.offset -= far_stars.height;
+    }
+}
+void Game::render_background()
+{
+    for(int y = static_cast<int>(far_stars.offset);y < get_window_height(); y += far_stars.height)
+    {
+        for(int x = 0;x < get_window_width();x += far_stars.width)
+        {
+            SDL_Rect dst_rect = {x,y,far_stars.width,far_stars.height};
+            SDL_RenderCopy(renderer,far_stars.texture,nullptr,&dst_rect);
+        }
+    }
+    for(int y = static_cast<int>(near_stars.offset);y < get_window_height(); y += near_stars.height)
+    {
+        for(int x = 0;x < get_window_width();x += near_stars.width)
+        {
+            SDL_Rect dst_rect = {x,y,near_stars.width,near_stars.height};
+            SDL_RenderCopy(renderer,near_stars.texture,nullptr,&dst_rect);
+        }
+    }
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "Scene.h"
+#include "Object.h"
 #include <SDL.h>
 #include <chrono>
 class Game
@@ -13,8 +14,10 @@ public:
     void init();
     void clean();
     void run();  
-    void change_scene(Scene* newScene);
-    void handle_event(SDL_Event* event);
+    void change_scene(Scene*);
+    void handle_event(SDL_Event*);
+    void update_background(float);
+    void render_background();
     void update(float);
     void render();
     SDL_Window* get_window() { return window;}
@@ -36,4 +39,6 @@ private:
     int FPS = 60;
     float frame_time;
     float delta_time;
+    Background near_stars;
+    Background far_stars;
 };

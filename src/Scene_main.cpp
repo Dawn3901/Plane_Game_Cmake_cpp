@@ -4,6 +4,8 @@
 #include <SDL_image.h>
 #include <chrono>
 #include <random>
+#include <string>
+
 const float pi = 3.14159f;
 const float drop_possibility = 0.5f;
 Scene_main::Scene_main():game(Game::get_instance()),player(new Player())
@@ -47,7 +49,10 @@ void Scene_main::init()
     player->width/=4;
     player->postion.x = game.get_window_width() / 2 - player->width / 2;
     player->postion.y = game.get_window_height() - player->height;
-    
+    // 加载生命值ui材质
+    health_ui = IMG_LoadTexture(game.get_renderer(),"assets/image/Health UI Black.png");
+    // 加载字体
+    score_font = TTF_OpenFont("assets/font/VonwaonBitmap-12px.ttf",24);
     // 加载敌机的材质(敌机模板)
     template_enemy.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/insect-1.png");
     SDL_QueryTexture(template_enemy.texture,NULL,NULL,&template_enemy.width,&template_enemy.height);
@@ -77,14 +82,18 @@ void Scene_main::init()
     SDL_QueryTexture(template_life_item.texture,NULL,NULL,&template_life_item.width,&template_life_item.height);
     template_life_item.width /= 4;
     template_life_item.height /= 4;
+    template_life_item.type = item_type::Life;
     template_time_item.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/bonus_time.png");
     SDL_QueryTexture(template_time_item.texture,NULL,NULL,&template_time_item.width,&template_time_item.height);
     template_time_item.width /=4;
     template_time_item.height /=4;
+    template_time_item.type = item_type::Time;
     template_shield_item.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/bonus_shield.png");
     SDL_QueryTexture(template_shield_item.texture,NULL,NULL,&template_shield_item.width,&template_shield_item.height);
     template_shield_item.width /=4;
     template_shield_item.height /=4;
+    template_shield_item.type = item_type::Shield;
+
 }
 void Scene_main::clean()
 {
@@ -96,6 +105,16 @@ void Scene_main::clean()
     if(player->texture != nullptr)
     {
         SDL_DestroyTexture(player->texture);
+    }
+    // 清理生命值ui材质
+    if(health_ui != nullptr)
+    {
+        SDL_DestroyTexture(health_ui);
+    }
+    // 清理字体
+    if(score_font != nullptr)
+    {
+        TTF_CloseFont(score_font);
     }
     // 清理子弹
     for(auto& bullet : bullets)
@@ -200,6 +219,8 @@ void Scene_main::render()
     render_item();
     // 渲染爆炸特性
     render_explosion();
+    // 渲染ui
+    render_ui();
 }
 void Scene_main::update(float delta_time)
 {
@@ -446,6 +467,7 @@ void Scene_main::update_item(float delta_time)
 
 void Scene_main::player_get_item(Item* item)
 {
+    score += 50;
     if(item->type == item_type::Life)
     {
         player->current_health = player->current_health <= player->max_health ? player->current_health + 1 : player->max_health;
@@ -476,6 +498,35 @@ void Scene_main::render_bullets()
         float angle = atan2(bullet->direction.y,bullet->direction.x) * 180 / pi - 90.0f;
         SDL_RenderCopyEx(game.get_renderer(),bullet->texture,NULL,&bullet_rect,angle,NULL,SDL_FLIP_NONE);
     }
+}
+void Scene_main::render_ui()
+{
+    // 渲染声明值
+    int x = 10,y = 10;
+    int offset = 40;
+    int size = 32;
+    SDL_SetTextureColorMod(health_ui,100,100,100);
+    for(int i = 0;i < player->max_health; ++i)
+    {
+        SDL_Rect rect = {x + i * offset,y,size,size};
+        SDL_RenderCopy(game.get_renderer(),health_ui,NULL,&rect);
+
+    }
+    SDL_SetTextureColorMod(health_ui,255,255,255); //还原颜色
+    for(int i = 0;i < player->current_health;++i)
+    {
+        SDL_Rect rect = {x + i * offset,y,size,size};
+        SDL_RenderCopy(game.get_renderer(),health_ui,NULL,&rect);
+    }
+    // 渲染得分
+    std::string score_text = "SCORE: " + std::to_string(score);
+    SDL_Color  score_color = {255,255,255,255};
+    SDL_Surface* surface = TTF_RenderText_Solid(score_font,score_text.c_str(),score_color);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(game.get_renderer(),surface);
+    SDL_Rect score_rect = {game.get_window_width() - surface->w,10,surface->w,surface->h};
+    SDL_RenderCopy(game.get_renderer(),texture,NULL,&score_rect);
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
 }
 void Scene_main::spawn_enemy()
 {
@@ -528,6 +579,7 @@ void Scene_main::update_enemies(float delta_time)
             if(enemy->current_health <= 0)
             {
                 enemy_explode(enemy);
+                score += 10;
                 it = enemies.erase(it);
             }
             else
@@ -561,6 +613,7 @@ void Scene_main::update_enemies(float delta_time)
             if(monster->current_health <= 0)
             {
                 enemy_explode(monster);
+                score += 20;
                 it = monsters.erase(it);
             }
             else it++;

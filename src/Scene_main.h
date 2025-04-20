@@ -2,6 +2,7 @@
 #include "Object.h"
 #include "Scene.h"
 #include <SDL_mixer.h>
+#include <SDL_ttf.h>
 #include <list>
 #include <random>
 #include <map>
@@ -28,6 +29,7 @@ public:
     void update_explosion(float);
     void render_bullets();
     void render_explosion();
+    void render_ui();
     void spawn_enemy();
     void update_enemies(float);
     void render_enemies();
@@ -41,7 +43,10 @@ private:
     Game& game;
     Player* player;
     Mix_Music* bgm;
+    SDL_Texture* health_ui;
+    TTF_Font* score_font;
     bool is_dead = false;
+    int score = 0;
     std::mt19937 gen;
     std::uniform_real_distribution<float> dis;
     Bullet template_bullet;
