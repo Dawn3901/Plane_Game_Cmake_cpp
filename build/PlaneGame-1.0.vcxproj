@@ -341,6 +341,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="D:\GCC\code\Cmake\Cmake_Game\src\Scene_main.cpp" />
     <ClCompile Include="D:\GCC\code\Cmake\Cmake_Game\src\Scene_title.cpp" />
     <ClCompile Include="D:\GCC\code\Cmake\Cmake_Game\src\Scene.cpp" />
+    <ClCompile Include="D:\GCC\code\Cmake\Cmake_Game\src\Scene_end.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="D:\GCC\code\Cmake\Cmake_Game\build\ZERO_CHECK.vcxproj">

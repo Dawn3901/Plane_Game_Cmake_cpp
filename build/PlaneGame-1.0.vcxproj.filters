@@ -16,6 +16,9 @@
     <ClCompile Include="D:\GCC\code\Cmake\Cmake_Game\src\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="D:\GCC\code\Cmake\Cmake_Game\src\Scene_end.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="D:\GCC\code\Cmake\Cmake_Game\CMakeLists.txt" />

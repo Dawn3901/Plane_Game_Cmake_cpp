@@ -1,6 +1,7 @@
 #include "Scene_main.h"
 #include "Scene_title.h"
 #include "Game.h"
+#include "Scene_end.h"
 #include <SDL.h>
 #include <SDL_image.h>
 #include <chrono>
@@ -233,6 +234,10 @@ void Scene_main::update(float delta_time)
     update_player(delta_time);
     update_explosion(delta_time);
     update_item(delta_time);
+    if(is_dead)
+    {
+        change_scene_delay(delta_time,1.5f);
+    }
 }
 void Scene_main::handle_event(SDL_Event* event)
 {
@@ -695,5 +700,15 @@ void Scene_main::render_explosion()
         SDL_Rect explosion_src = {explosion->current_frame * explosion->width,0,explosion->width,explosion->width};
         SDL_Rect explosion_dst = {static_cast<int>(explosion->postion.x),static_cast<int>(explosion->postion.y),explosion->width,explosion->height};
         SDL_RenderCopy(game.get_renderer(),explosion->texture,&explosion_src,&explosion_dst);
+    }
+}
+void Scene_main::change_scene_delay(float delta_time,float delay)
+{
+    timer_end += delta_time;
+    if(timer_end >= delay)
+    {
+        game.set_final_score(score);
+        Scene_end* scene_end = new Scene_end();
+        game.change_scene(scene_end);
     }
 }

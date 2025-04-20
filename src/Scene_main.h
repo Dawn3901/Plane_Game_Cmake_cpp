@@ -39,12 +39,14 @@ public:
     void update_item(float);
     void player_get_item(Item*);
     void render_item();
+    void change_scene_delay(float,float);
 private:
     Player* player;
     Mix_Music* bgm;
     SDL_Texture* health_ui;
     TTF_Font* score_font;
     bool is_dead = false;
+    float timer_end = 0.0f;
     int score = 0;
     std::mt19937 gen;
     std::uniform_real_distribution<float> dis;

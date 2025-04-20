@@ -210,7 +210,7 @@ void Game::render_background()
         }
     }
 }
-void Game::render_text_center(std::string& text,float y,TTF_Font* font)
+SDL_Point Game::render_text_center(std::string& text,float y,TTF_Font* font)
 {
     SDL_Color text_color = {255,255,255,255};
     SDL_Surface* surface = TTF_RenderText_Solid(font,text.c_str(),text_color);
@@ -219,4 +219,16 @@ void Game::render_text_center(std::string& text,float y,TTF_Font* font)
     SDL_RenderCopy(renderer,texture,NULL,&text_rect);
     SDL_FreeSurface(surface);
     SDL_DestroyTexture(texture);
+    return {text_rect.x + text_rect.w, static_cast<int>((window_width - surface->h) * y)};
+}
+SDL_Point Game::render_text(std::string& text,int x,int y,TTF_Font* font)
+{
+    SDL_Color text_color = {255,255,255,255};
+    SDL_Surface* surface = TTF_RenderText_Solid(font,text.c_str(),text_color);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer,surface);
+    SDL_Rect text_rect = {x,y,surface->w,surface->h};
+    SDL_RenderCopy(renderer,texture,NULL,&text_rect);
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
+    return {text_rect.x + text_rect.w,y};
 }
