@@ -19,6 +19,7 @@ Scene_main::~Scene_main()
     clean();
     delete player;
 }
+// 基本框架
 void Scene_main::init()
 {
     // 加载音乐
@@ -232,8 +233,8 @@ void Scene_main::update(float delta_time)
     spawn_enemy();
     update_enemies(delta_time);
     update_enemy_bullets(delta_time);
-    update_player(delta_time);
-    update_explosion(delta_time);
+    update_player();
+    update_explosion();
     update_item(delta_time);
     if(is_dead)
     {
@@ -298,37 +299,97 @@ void Scene_main::keyboard_control(float delta_time)
         }
     }
 }
-void Scene_main::shoot()
+void Scene_main::change_scene_delay(float delta_time,float delay)
 {
-    Bullet* bullet_player = new Bullet(template_bullet);//拷贝构造创建子弹，防止多次读取文件
-    bullet_player->position.x = player->postion.x + player->width/2 - bullet_player->width/2;
-    bullet_player->position.y = player->postion.y;
-    bullets.push_back(bullet_player);
-    Mix_PlayChannel(0,sounds["player_shoot"],0);
-}
-void Scene_main::double_shoot()
-{
-    Bullet* bullet_player_1 = new Bullet(template_bullet);
-    bullet_player_1->position.x = player->postion.x + player->width/2 - bullet_player_1->width/2 - 10;
-    bullet_player_1->position.y = player->postion.y;
-    bullets.push_back(bullet_player_1);
-    Bullet* bullet_player_2 = new Bullet(template_bullet);
-    bullet_player_2->position.x = player->postion.x + player->width/2 - bullet_player_2->width/2 + 10;
-    bullet_player_2->position.y = player->postion.y;
-    bullets.push_back(bullet_player_2);
-    Mix_PlayChannel(0,sounds["player_shoot"],0);
+    timer_end += delta_time;
+    if(timer_end >= delay)
+    {
+        game.set_final_score(score);
+        Scene_end* scene_end = new Scene_end();
+        game.change_scene(scene_end);
+    }
 }
 
-void Scene_main::shoot(Enemy* enemy)
+// render
+void Scene_main::render_bullets()
 {
-    Enemy_Bullet* bullet_enemy = new Enemy_Bullet(template_enemy_bullet);
-    bullet_enemy->position.x = enemy->postion.x + enemy->width/2 - bullet_enemy->width/2;
-    bullet_enemy->position.y = enemy->postion.y + enemy->height;
-    bullet_enemy->direction = get_direction(enemy);
-    enemy_bullets.push_back(bullet_enemy);
-    Mix_PlayChannel(-1,sounds["enemy_shoot"],0);
+    // 渲染玩家子弹
+    for(auto bullet : bullets)
+    {
+        SDL_Rect bullet_rect = {static_cast<int>(bullet->position.x),static_cast<int>(bullet->position.y),bullet->width,bullet->height};
+        SDL_RenderCopy(game.get_renderer(),bullet->texture,NULL,&bullet_rect);
+    }
+    // 渲染敌机子弹
+    for(auto bullet : enemy_bullets)
+    {
+        SDL_Rect bullet_rect = {static_cast<int>(bullet->position.x),static_cast<int>(bullet->position.y),bullet->width,bullet->height};
+        float angle = atan2(bullet->direction.y,bullet->direction.x) * 180 / pi - 90.0f;
+        SDL_RenderCopyEx(game.get_renderer(),bullet->texture,NULL,&bullet_rect,angle,NULL,SDL_FLIP_NONE);
+    }
 }
-void Scene_main::update_player(float delta_time)
+void Scene_main::render_explosion()
+{
+    for(auto explosion : explosions)
+    {
+        SDL_Rect explosion_src = {explosion->current_frame * explosion->width,0,explosion->width / 2,explosion->width / 2};
+        SDL_Rect explosion_dst = {static_cast<int>(explosion->postion.x),static_cast<int>(explosion->postion.y),explosion->width,explosion->height};
+        SDL_RenderCopy(game.get_renderer(),explosion->texture,&explosion_src,&explosion_dst);
+    }
+}
+void Scene_main::render_ui()
+{
+    // 渲染声明值
+    int x = 10,y = 10;
+    int offset = 40;
+    int size = 32;
+    SDL_SetTextureColorMod(health_ui,100,100,100);
+    for(int i = 0;i < player->max_health; ++i)
+    {
+        SDL_Rect rect = {x + i * offset,y,size,size};
+        SDL_RenderCopy(game.get_renderer(),health_ui,NULL,&rect);
+
+    }
+    SDL_SetTextureColorMod(health_ui,255,255,255); //还原颜色
+    for(int i = 0;i < player->current_health;++i)
+    {
+        SDL_Rect rect = {x + i * offset,y,size,size};
+        SDL_RenderCopy(game.get_renderer(),health_ui,NULL,&rect);
+    }
+    // 渲染得分
+    std::string score_text = "SCORE: " + std::to_string(score);
+    SDL_Color  score_color = {255,255,255,255};
+    SDL_Surface* surface = TTF_RenderText_Solid(score_font,score_text.c_str(),score_color);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(game.get_renderer(),surface);
+    SDL_Rect score_rect = {game.get_window_width() - surface->w,10,surface->w,surface->h};
+    SDL_RenderCopy(game.get_renderer(),texture,NULL,&score_rect);
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
+}
+void Scene_main::render_enemies()
+{
+    for(auto enemy:enemies)
+    {
+        SDL_Rect enemy_rect = {static_cast<int>(enemy->postion.x),static_cast<int>(enemy->postion.y),enemy->width,enemy->height};
+        SDL_RenderCopy(game.get_renderer(),enemy->texture,NULL,&enemy_rect);
+    }
+    for(auto monster:monsters)
+    {
+        SDL_Rect monster_rect = {static_cast<int>(monster->postion.x),static_cast<int>(monster->postion.y),monster->width,monster->height};
+        SDL_RenderCopy(game.get_renderer(),monster->texture,NULL,&monster_rect);
+    }
+}
+
+void Scene_main::render_item()
+{
+    for(auto item : items)
+    {
+        SDL_Rect item_rect = {static_cast<int>(item->postion.x),static_cast<int>(item->postion.y),item->width,item->height};
+        SDL_RenderCopy(game.get_renderer(),item->texture,NULL,&item_rect);
+    }
+}
+
+// update
+void Scene_main::update_player()
 {
     if(is_dead) return;
     if(player->current_health <= 0)
@@ -392,177 +453,6 @@ void Scene_main::update_bullets(float delta_time)
                 ++it;
             }
         }
-    }
-}
-void Scene_main::update_enemy_bullets(float delta_time)
-{
-    int margin = 32;
-    for(auto it = enemy_bullets.begin();it != enemy_bullets.end();)
-    {
-        auto bullet = *it;
-        bullet->position.y += bullet->speed * bullet->direction.y * delta_time;
-        bullet->position.x += bullet->speed * bullet->direction.x * delta_time;
-        if(bullet->position.x + margin < 0 || bullet->position.x - margin > game.get_window_width()
-        || bullet->position.y + margin < 0 || bullet->position.y - margin > game.get_window_height())
-        {
-            delete bullet;
-            it = enemy_bullets.erase(it);
-        }
-        else{
-            SDL_Rect player_rect = {static_cast<int>(player->postion.x),static_cast<int>(player->postion.y),player->width,player->height};
-            SDL_Rect bullet_rect = {static_cast<int>(bullet->position.x),static_cast<int>(bullet->position.y),bullet->width,bullet->height};
-            if(SDL_HasIntersection(&player_rect,&bullet_rect) && !is_dead)
-            {
-                Mix_PlayChannel(-1,sounds["hit"],0);
-                player->current_health -= bullet->damage;
-                delete bullet;
-                it = enemy_bullets.erase(it);
-            }
-            else ++it;
-        }
-    }
-}
-
-void Scene_main::update_explosion(float delta_time)
-{
-    auto current_time = SDL_GetTicks();
-    for(auto it = explosions.begin();it != explosions.end();)
-    {
-        auto explosion = *it;
-        explosion->current_frame = (current_time - explosion->start_time) * explosion->FPS / 1000;
-        if(explosion->current_frame > explosion->total_frame)
-        {
-            delete explosion;
-            it = explosions.erase(it);
-        }
-        else ++it;
-    }
-}
-
-void Scene_main::update_item(float delta_time)
-{
-    for(auto it = items.begin();it != items.end();)
-    {
-        auto item = *it;
-        item->postion.x += item->speed * item->direction.x * delta_time;
-        item->postion.y += item->speed * item->direction.y * delta_time;
-        if(item->bounce_count > 0)
-        {
-            if(item->postion.x < 0 || item->postion.x + item->width > game.get_window_width() > 0)
-            {
-                item->direction.x = - item->direction.x;
-                item->bounce_count --;
-            }
-            else if(item->postion.y < 0 || item->postion.y + item->height > game.get_window_height())
-            {
-                item->direction.y = - item->direction.y;
-                item->bounce_count --;
-            }
-        }
-        if(item->postion.x + item->width < 0 || item->postion.x > game.get_window_width() || item->postion.y + item->height < 0 || item->postion.y > game.get_window_height())
-        {
-            delete item;
-            it = items.erase(it);
-        }
-        else
-        {
-            SDL_Rect item_rect = {static_cast<int>(item->postion.x),static_cast<int>(item->postion.y),item->width,item->height};
-            SDL_Rect player_rect = {static_cast<int>(player->postion.x),static_cast<int>(player->postion.y),player->width,player->height};
-            if(SDL_HasIntersection(&item_rect,&player_rect) && !is_dead)
-            {
-                player_get_item(item);
-                delete item;
-                it = items.erase(it);
-            }
-            else ++it;
-        }
-    }    
-}
-
-void Scene_main::player_get_item(Item* item)
-{
-    score += 50;
-    if(item->type == item_type::Life)
-    {
-        player->current_health = player->current_health <= player->max_health ? player->current_health + 1 : player->max_health;
-    }
-    else if(item->type == item_type::Time)
-    {
-
-    }
-    else if(item->type == item_type::Shield)
-    {
-
-    }
-    Mix_PlayChannel(-1,sounds["get_item"],0);
-}
-
-void Scene_main::render_bullets()
-{
-    // 渲染玩家子弹
-    for(auto bullet : bullets)
-    {
-        SDL_Rect bullet_rect = {static_cast<int>(bullet->position.x),static_cast<int>(bullet->position.y),bullet->width,bullet->height};
-        SDL_RenderCopy(game.get_renderer(),bullet->texture,NULL,&bullet_rect);
-    }
-    // 渲染敌机子弹
-    for(auto bullet : enemy_bullets)
-    {
-        SDL_Rect bullet_rect = {static_cast<int>(bullet->position.x),static_cast<int>(bullet->position.y),bullet->width,bullet->height};
-        float angle = atan2(bullet->direction.y,bullet->direction.x) * 180 / pi - 90.0f;
-        SDL_RenderCopyEx(game.get_renderer(),bullet->texture,NULL,&bullet_rect,angle,NULL,SDL_FLIP_NONE);
-    }
-}
-void Scene_main::render_ui()
-{
-    // 渲染声明值
-    int x = 10,y = 10;
-    int offset = 40;
-    int size = 32;
-    SDL_SetTextureColorMod(health_ui,100,100,100);
-    for(int i = 0;i < player->max_health; ++i)
-    {
-        SDL_Rect rect = {x + i * offset,y,size,size};
-        SDL_RenderCopy(game.get_renderer(),health_ui,NULL,&rect);
-
-    }
-    SDL_SetTextureColorMod(health_ui,255,255,255); //还原颜色
-    for(int i = 0;i < player->current_health;++i)
-    {
-        SDL_Rect rect = {x + i * offset,y,size,size};
-        SDL_RenderCopy(game.get_renderer(),health_ui,NULL,&rect);
-    }
-    // 渲染得分
-    std::string score_text = "SCORE: " + std::to_string(score);
-    SDL_Color  score_color = {255,255,255,255};
-    SDL_Surface* surface = TTF_RenderText_Solid(score_font,score_text.c_str(),score_color);
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(game.get_renderer(),surface);
-    SDL_Rect score_rect = {game.get_window_width() - surface->w,10,surface->w,surface->h};
-    SDL_RenderCopy(game.get_renderer(),texture,NULL,&score_rect);
-    SDL_FreeSurface(surface);
-    SDL_DestroyTexture(texture);
-}
-void Scene_main::spawn_enemy()
-{
-    // 每帧调用, 但是需要判断是否生成敌机
-    if(dis(gen) > 1.0f/60.0f) return;
-    if(dis(gen) > 4.0f/6.0f) 
-    {
-        Enemy* monster = new Enemy(template_monster);
-        monster->postion.x = dis(gen) * (game.get_window_width() - monster->width);
-        monster->postion.y = - monster->height;
-        monster->speed = monster->speed/2.0 +(monster->speed/2.0) * dis(gen);
-        monster->cool_down = 1500;
-        monster->current_health = 3;
-        monsters.push_back(monster);
-    }
-    else 
-    {
-        Enemy* enemy = new Enemy(template_enemy);
-        enemy->postion.x = dis(gen) * (game.get_window_width() - enemy->width);
-        enemy->postion.y = -enemy->height;
-        enemy->speed = enemy->speed/2.0 + (enemy->speed/3.0) * dis(gen); 
-        enemies.push_back(enemy);
     }
 }
 void Scene_main::update_enemies(float delta_time)
@@ -634,20 +524,161 @@ void Scene_main::update_enemies(float delta_time)
         }
     }
 }
-void Scene_main::render_enemies()
+void Scene_main::update_enemy_bullets(float delta_time)
 {
-    for(auto enemy:enemies)
+    int margin = 32;
+    for(auto it = enemy_bullets.begin();it != enemy_bullets.end();)
     {
-        SDL_Rect enemy_rect = {static_cast<int>(enemy->postion.x),static_cast<int>(enemy->postion.y),enemy->width,enemy->height};
-        SDL_RenderCopy(game.get_renderer(),enemy->texture,NULL,&enemy_rect);
-    }
-    for(auto monster:monsters)
-    {
-        SDL_Rect monster_rect = {static_cast<int>(monster->postion.x),static_cast<int>(monster->postion.y),monster->width,monster->height};
-        SDL_RenderCopy(game.get_renderer(),monster->texture,NULL,&monster_rect);
+        auto bullet = *it;
+        bullet->position.y += bullet->speed * bullet->direction.y * delta_time;
+        bullet->position.x += bullet->speed * bullet->direction.x * delta_time;
+        if(bullet->position.x + margin < 0 || bullet->position.x - margin > game.get_window_width()
+        || bullet->position.y + margin < 0 || bullet->position.y - margin > game.get_window_height())
+        {
+            delete bullet;
+            it = enemy_bullets.erase(it);
+        }
+        else{
+            SDL_Rect player_rect = {static_cast<int>(player->postion.x),static_cast<int>(player->postion.y),player->width,player->height};
+            SDL_Rect bullet_rect = {static_cast<int>(bullet->position.x),static_cast<int>(bullet->position.y),bullet->width,bullet->height};
+            if(SDL_HasIntersection(&player_rect,&bullet_rect) && !is_dead)
+            {
+                Mix_PlayChannel(-1,sounds["hit"],0);
+                player->current_health -= bullet->damage;
+                delete bullet;
+                it = enemy_bullets.erase(it);
+            }
+            else ++it;
+        }
     }
 }
 
+void Scene_main::update_explosion()
+{
+    auto current_time = SDL_GetTicks();
+    for(auto it = explosions.begin();it != explosions.end();)
+    {
+        auto explosion = *it;
+        explosion->current_frame = (current_time - explosion->start_time) * explosion->FPS / 1000;
+        if(explosion->current_frame > explosion->total_frame)
+        {
+            delete explosion;
+            it = explosions.erase(it);
+        }
+        else ++it;
+    }
+}
+
+void Scene_main::update_item(float delta_time)
+{
+    for(auto it = items.begin();it != items.end();)
+    {
+        auto item = *it;
+        item->postion.x += item->speed * item->direction.x * delta_time;
+        item->postion.y += item->speed * item->direction.y * delta_time;
+        if(item->bounce_count > 0)
+        {
+            if(item->postion.x < 0 || item->postion.x + item->width > game.get_window_width())
+            {
+                item->direction.x = - item->direction.x;
+                item->bounce_count --;
+            }
+            else if(item->postion.y < 0 || item->postion.y + item->height > game.get_window_height())
+            {
+                item->direction.y = - item->direction.y;
+                item->bounce_count --;
+            }
+        }
+        if(item->postion.x + item->width < 0 || item->postion.x > game.get_window_width() || item->postion.y + item->height < 0 || item->postion.y > game.get_window_height())
+        {
+            delete item;
+            it = items.erase(it);
+        }
+        else
+        {
+            SDL_Rect item_rect = {static_cast<int>(item->postion.x),static_cast<int>(item->postion.y),item->width,item->height};
+            SDL_Rect player_rect = {static_cast<int>(player->postion.x),static_cast<int>(player->postion.y),player->width,player->height};
+            if(SDL_HasIntersection(&item_rect,&player_rect) && !is_dead)
+            {
+                player_get_item(item);
+                delete item;
+                it = items.erase(it);
+            }
+            else ++it;
+        }
+    }    
+}
+
+// else
+void Scene_main::shoot()
+{
+    Bullet* bullet_player = new Bullet(template_bullet);//拷贝构造创建子弹，防止多次读取文件
+    bullet_player->position.x = player->postion.x + player->width/2 - bullet_player->width/2;
+    bullet_player->position.y = player->postion.y;
+    bullets.push_back(bullet_player);
+    Mix_PlayChannel(0,sounds["player_shoot"],0);
+}
+void Scene_main::double_shoot()
+{
+    Bullet* bullet_player_1 = new Bullet(template_bullet);
+    bullet_player_1->position.x = player->postion.x + player->width/2 - bullet_player_1->width/2 - 10;
+    bullet_player_1->position.y = player->postion.y;
+    bullets.push_back(bullet_player_1);
+    Bullet* bullet_player_2 = new Bullet(template_bullet);
+    bullet_player_2->position.x = player->postion.x + player->width/2 - bullet_player_2->width/2 + 10;
+    bullet_player_2->position.y = player->postion.y;
+    bullets.push_back(bullet_player_2);
+    Mix_PlayChannel(0,sounds["player_shoot"],0);
+}
+void Scene_main::shoot(Enemy* enemy)
+{
+    Enemy_Bullet* bullet_enemy = new Enemy_Bullet(template_enemy_bullet);
+    bullet_enemy->position.x = enemy->postion.x + enemy->width/2 - bullet_enemy->width/2;
+    bullet_enemy->position.y = enemy->postion.y + enemy->height;
+    bullet_enemy->direction = get_direction(enemy);
+    enemy_bullets.push_back(bullet_enemy);
+    Mix_PlayChannel(-1,sounds["enemy_shoot"],0);
+}
+void Scene_main::player_get_item(Item* item)
+{
+    score += 50;
+    if(item->type == item_type::Life)
+    {
+        player->current_health = player->current_health <= player->max_health ? player->current_health + 1 : player->max_health;
+    }
+    else if(item->type == item_type::Time)
+    {
+        score += 100;
+    }
+    else if(item->type == item_type::Shield)
+    {
+        player->current_health = player->current_health <= player->max_health ? player->current_health + 1 : player->max_health;
+    }
+    Mix_PlayChannel(-1,sounds["get_item"],0);
+}
+void Scene_main::spawn_enemy()
+{
+    // 每帧调用, 但是需要判断是否生成敌机
+    if(dis(gen) > 1.0f/60.0f) return;
+    if(dis(gen) > 4.0f/6.0f) 
+    {
+        Enemy* monster = new Enemy(template_monster);
+        monster->postion.x = dis(gen) * (game.get_window_width() - monster->width);
+        monster->postion.y = - monster->height;
+        monster->speed = monster->speed/2.0 +(monster->speed/2.0) * dis(gen);
+        monster->cool_down = 1500;
+        monster->current_health = 3;
+        monsters.push_back(monster);
+    }
+    else 
+    {
+        Enemy* enemy = new Enemy(template_enemy);
+        enemy->postion.x = dis(gen) * (game.get_window_width() - enemy->width);
+        enemy->postion.y = -enemy->height;
+        enemy->speed = enemy->speed/2.0 + (enemy->speed/3.0) * dis(gen); 
+        enemies.push_back(enemy);
+    }
+}
 SDL_FPoint Scene_main::get_direction(Enemy* enemy)
 {
     float x = (player->postion.x + player->width/2) - (enemy->postion.x + enemy->width/2);
@@ -655,7 +686,6 @@ SDL_FPoint Scene_main::get_direction(Enemy* enemy)
     float length = sqrt(x*x+y*y);
     return SDL_FPoint{x/length,y/length};
 }
-
 void Scene_main::enemy_explode(Enemy* enemy)
 {
     auto current_time = SDL_GetTicks();
@@ -685,31 +715,4 @@ void Scene_main::item_drop(Enemy* enemy,item_type drop_type)
     item->direction.x = cos(angle);
     item->direction.y = sin(angle);
     items.push_back(item);
-}
-void Scene_main::render_item()
-{
-    for(auto item : items)
-    {
-        SDL_Rect item_rect = {static_cast<int>(item->postion.x),static_cast<int>(item->postion.y),item->width,item->height};
-        SDL_RenderCopy(game.get_renderer(),item->texture,NULL,&item_rect);
-    }
-}
-void Scene_main::render_explosion()
-{
-    for(auto explosion : explosions)
-    {
-        SDL_Rect explosion_src = {explosion->current_frame * explosion->width,0,explosion->width / 2,explosion->width / 2};
-        SDL_Rect explosion_dst = {static_cast<int>(explosion->postion.x),static_cast<int>(explosion->postion.y),explosion->width,explosion->height};
-        SDL_RenderCopy(game.get_renderer(),explosion->texture,&explosion_src,&explosion_dst);
-    }
-}
-void Scene_main::change_scene_delay(float delta_time,float delay)
-{
-    timer_end += delta_time;
-    if(timer_end >= delay)
-    {
-        game.set_final_score(score);
-        Scene_end* scene_end = new Scene_end();
-        game.change_scene(scene_end);
-    }
 }

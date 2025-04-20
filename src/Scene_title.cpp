@@ -37,11 +37,11 @@ void Scene_title::handle_event(SDL_Event* event)
 void Scene_title::render()
 {
     std::string title = "SDL Plane Game";
-    game.render_text_center(title,0.4,game.get_title_font());
+    game.render_text_center(title,0.4f,game.get_title_font());
     if(timer < 0.4f)
     {
         std::string text = "Press J to start";
-        game.render_text_center(text,0.8,game.get_text_font());
+        game.render_text_center(text,0.8f,game.get_text_font());
     }
 }
 

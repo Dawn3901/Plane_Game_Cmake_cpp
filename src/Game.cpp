@@ -10,6 +10,7 @@ Game::~Game()
     save_data();
     clean();
 }
+// 基本框架
 void Game::init()
 {
     frame_time = 1000.0f / FPS;
@@ -178,39 +179,14 @@ void Game::handle_event(SDL_Event* event)
         current_scene->handle_event(event);
     }
 }
-void Game::update(float delta_time)
-{
-    update_background(delta_time);
-    current_scene->update(delta_time);
-}
+
+// render
 void Game::render()
 {
     SDL_RenderClear(renderer);
     render_background();
     current_scene->render();
     SDL_RenderPresent(renderer);
-}
-int Game::get_window_width()
-{
-    return window_width;
-}
-int Game::get_window_height()
-{
-    return window_height;
-}
-void Game::update_background(float delta_time)
-{
-    near_stars.offset += near_stars.speed * delta_time;
-    if(near_stars.offset >= 0)
-    {
-        near_stars.offset -= near_stars.height;
-    }
-
-    far_stars.offset += far_stars.speed * delta_time;
-    if(far_stars.offset >= 0)
-    {
-        far_stars.offset -= far_stars.height;
-    }
 }
 void Game::render_background()
 {
@@ -261,6 +237,41 @@ SDL_Point Game::render_text(std::string& text,int x,int y,TTF_Font* font,bool is
     SDL_DestroyTexture(texture);
     return {text_rect.x + text_rect.w,y};
 }
+
+// update
+void Game::update(float delta_time)
+{
+    update_background(delta_time);
+    current_scene->update(delta_time);
+}
+void Game::update_background(float delta_time)
+{
+    near_stars.offset += near_stars.speed * delta_time;
+    if(near_stars.offset >= 0)
+    {
+        near_stars.offset -= near_stars.height;
+    }
+
+    far_stars.offset += far_stars.speed * delta_time;
+    if(far_stars.offset >= 0)
+    {
+        far_stars.offset -= far_stars.height;
+    }
+}
+
+// get
+int Game::get_window_width()
+{
+    return window_width;
+}
+int Game::get_window_height()
+{
+    return window_height;
+}
+
+//set
+
+// leader_board
 void Game::insert_leader_board(int score,std::string& name)
 {
     leader_board.insert({score,name});
