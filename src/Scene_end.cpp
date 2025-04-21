@@ -96,8 +96,7 @@ void Scene_end::render_phase_1()
     game.render_text_center(instruction,0.6f,game.get_text_font());
     if(name != "")
     {
-        SDL_Point position = game.render_text_center(name,0.7f,game.get_text_font());
-        //std::cout<<"x = "<<position.x<<";y = "<<position.y<<std::endl;
+        SDL_Point position = game.render_text_center(name,0.75f,game.get_text_font());
         if(blink_timer < 0.5f)
         {
             game.render_text(cursor,position.x,position.y,game.get_text_font());
@@ -107,7 +106,7 @@ void Scene_end::render_phase_1()
     {  
         if(blink_timer < 0.5f)
         {
-            game.render_text_center(cursor,0.7f,game.get_text_font());
+            game.render_text_center(cursor,0.75f,game.get_text_font());
         }
     }
 }

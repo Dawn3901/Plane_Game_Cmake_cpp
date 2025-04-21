@@ -6,7 +6,7 @@
 #include <list>
 #include <random>
 #include <map>
-
+const float game_time = 60.0f;
 class Game;
 
 class Scene_main : public Scene
@@ -28,13 +28,14 @@ public:
     void render_ui();
     void render_enemies();
     void render_item();
+    void render_timer();
     // update
-    void update_player();
-    void update_bullets(float);
-    void update_enemy_bullets(float);
+    void update_player(float delta_time);
+    void update_bullets(float delta_time);
+    void update_enemy_bullets(float delta_time);
     void update_explosion();
-    void update_enemies(float);
-    void update_item(float);
+    void update_enemies(float delta_time) ;
+    void update_item(float delta_time);
     // else
     void shoot();
     void double_shoot();
@@ -50,10 +51,13 @@ private:
     SDL_Texture* health_ui;
     TTF_Font* score_font;
     float timer_end = 0.0f;
+    float timer = game_time;
+    float blink_timer = 0.5f;
     // player
     Player* player;
     int score = 0;
     bool is_dead = false;
+    Shield shield;
     // random
     std::mt19937 gen;
     std::uniform_real_distribution<float> dis;

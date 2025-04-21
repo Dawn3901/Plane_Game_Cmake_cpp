@@ -37,6 +37,7 @@ public:
     int get_window_width();
     int get_window_height();
     int get_final_score() {return final_score;}
+    bool is_paused() {return Is_paused;}
     // set
     void set_final_score(int score) {final_score = score;}
     // leader_board

@@ -8,8 +8,8 @@
 int main(int,char**)
 {
     //单例模式新建游戏
-    Game& start = Game::get_instance();
-    start.init();
-    start.run();
+    Game& game = Game::get_instance();
+    game.init();
+    game.run();
     return 0;
 }

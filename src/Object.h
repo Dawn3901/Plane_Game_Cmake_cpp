@@ -17,6 +17,8 @@ struct Player
     int max_health = 5;
     Uint32 last_shot_time = 0;
     Uint32 cool_down = 150;
+    float shield_timer = 0.0f;
+    float shield_max_time = 3.0f;
 };
 struct Enemy
 {
@@ -78,4 +80,11 @@ struct Background
     int width = 0;
     int height = 0;
     int speed = 50;
+};
+struct Shield
+{
+    SDL_Texture* texture = nullptr;
+    SDL_FPoint position = {0,0};
+    int width = 0;
+    int height = 0;
 };

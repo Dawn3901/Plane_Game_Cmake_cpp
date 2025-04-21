@@ -97,7 +97,11 @@ void Scene_main::init()
     template_shield_item.width /=4;
     template_shield_item.height /=4;
     template_shield_item.type = item_type::Shield;
-
+    // 加载盾牌的材质
+    shield.texture = IMG_LoadTexture(game.get_renderer(),"assets/image/shield.png");
+    SDL_QueryTexture(shield.texture,NULL,NULL,&shield.width,&shield.height);
+    shield.width /=4;
+    shield.height /=4;
 }
 void Scene_main::clean()
 {
@@ -114,6 +118,11 @@ void Scene_main::clean()
     if(health_ui != nullptr)
     {
         SDL_DestroyTexture(health_ui);
+    }
+    // 清理盾牌材质
+    if(shield.texture != nullptr)
+    {
+        SDL_DestroyTexture(shield.texture);
     }
     // 清理字体
     if(score_font != nullptr)
@@ -212,8 +221,22 @@ void Scene_main::render()
     // 渲染玩家
     if(!is_dead)
     {
-        SDL_Rect player_rect = {static_cast<int>(player->postion.x),static_cast<int>(player->postion.y),player->width,player->height};
+        SDL_Rect player_rect = {
+            static_cast<int>(player->postion.x),
+            static_cast<int>(player->postion.y),
+            player->width,
+            player->height};
         SDL_RenderCopy(game.get_renderer(),player->texture,NULL,&player_rect);
+    }
+    // 渲染盾牌
+    if(player->shield_timer > 0)
+    {
+        SDL_Rect shield_rect = {
+            static_cast<int>(player->postion.x) + player->width/2 - shield.width/2,
+            static_cast<int>(player->postion.y) - player->height + shield.height/2,
+            shield.width,
+            shield.height};
+        SDL_RenderCopy(game.get_renderer(),shield.texture,NULL,&shield_rect);
     }
     // 渲染子弹
     render_bullets();
@@ -225,21 +248,51 @@ void Scene_main::render()
     render_explosion();
     // 渲染ui
     render_ui();
+    // 渲染计时器
+    if(timer >= 10.0f)
+    {
+        render_timer();
+    }
+    else if(timer < 10.0f && blink_timer < 0.25f)
+    {
+        render_timer();
+    }
+    // 渲染提示
+    if(game.is_paused())
+    {
+        std::string tips_text = "Press Space to continue.";
+        game.render_text_center(tips_text,0.5f,game.get_text_font());
+        std::string exit_text = "Press Esc to return main memu.";
+        game.render_text_center(exit_text,0.6f,game.get_text_font());
+    }
 }
 void Scene_main::update(float delta_time)
 {
+    if(game.is_paused())
+    {
+        Mix_PauseMusic();
+        return;
+    }
+    Mix_ResumeMusic();
     keyboard_control(delta_time);
     update_bullets(delta_time);
     spawn_enemy();
     update_enemies(delta_time);
     update_enemy_bullets(delta_time);
-    update_player();
+    update_player(delta_time);
     update_explosion();
     update_item(delta_time);
-    if(is_dead)
+    if(is_dead || timer <= 0)
     {
         change_scene_delay(delta_time,1.5f);
     }
+    timer -= delta_time;
+    blink_timer -= delta_time;
+    if(blink_timer < 0)
+    {
+        blink_timer += 0.5f;
+    }
+    
 }
 void Scene_main::handle_event(SDL_Event* event)
 {
@@ -378,7 +431,6 @@ void Scene_main::render_enemies()
         SDL_RenderCopy(game.get_renderer(),monster->texture,NULL,&monster_rect);
     }
 }
-
 void Scene_main::render_item()
 {
     for(auto item : items)
@@ -387,11 +439,20 @@ void Scene_main::render_item()
         SDL_RenderCopy(game.get_renderer(),item->texture,NULL,&item_rect);
     }
 }
+void Scene_main::render_timer()
+{
+    std::string text_timer = std::to_string(static_cast<int>(timer)) + " s";
+    game.render_text_center(text_timer,0.1f,game.get_text_font());
+}
 
 // update
-void Scene_main::update_player()
+void Scene_main::update_player(float delta_time)
 {
     if(is_dead) return;
+    if(player->shield_timer > 0)
+    {
+        player->shield_timer -= delta_time;
+    }
     if(player->current_health <= 0)
     {
         auto current_time = SDL_GetTicks();
@@ -466,7 +527,10 @@ void Scene_main::update_enemies(float delta_time)
         SDL_Rect enemy_rect = {static_cast<int>(enemy->postion.x),static_cast<int>(enemy->postion.y),enemy->width,enemy->height};
         if(SDL_HasIntersection(&enemy_rect,&player_rect)  && !is_dead)
         {
-            player->current_health -= 1;
+            if(player->shield_timer <= 0)
+            {
+                player->current_health -= 1;
+            }
             enemy->current_health = 0;
         }
         if(enemy->postion.y > game.get_window_height()){
@@ -500,7 +564,10 @@ void Scene_main::update_enemies(float delta_time)
         if(SDL_HasIntersection(&monster_rect,&player_rect) && !is_dead)
         {
             monster->current_health = 0;
-            player->current_health -=1;
+            if(player->shield_timer <= 0)
+            {
+                player->current_health -= 1;
+            }
         }
         if(monster->postion.y > game.get_window_height())
         {
@@ -544,7 +611,10 @@ void Scene_main::update_enemy_bullets(float delta_time)
             if(SDL_HasIntersection(&player_rect,&bullet_rect) && !is_dead)
             {
                 Mix_PlayChannel(-1,sounds["hit"],0);
-                player->current_health -= bullet->damage;
+                if(player->shield_timer <= 0)
+                {
+                    player->current_health -= bullet->damage;
+                }
                 delete bullet;
                 it = enemy_bullets.erase(it);
             }
@@ -644,15 +714,17 @@ void Scene_main::player_get_item(Item* item)
     score += 50;
     if(item->type == item_type::Life)
     {
-        player->current_health = player->current_health <= player->max_health ? player->current_health + 1 : player->max_health;
+        player->current_health = player->current_health < player->max_health ? player->current_health + 1 : player->max_health;
     }
     else if(item->type == item_type::Time)
     {
+        timer += 10.0f;
+        if(timer > 120.0f) timer = 120.0f;
         score += 100;
     }
     else if(item->type == item_type::Shield)
     {
-        player->current_health = player->current_health <= player->max_health ? player->current_health + 1 : player->max_health;
+        player->shield_timer = player->shield_max_time;
     }
     Mix_PlayChannel(-1,sounds["get_item"],0);
 }

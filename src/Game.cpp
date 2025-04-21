@@ -175,6 +175,14 @@ void Game::handle_event(SDL_Event* event)
                     SDL_SetWindowFullscreen(window,0);
                 }
             }
+            if(event->key.keysym.scancode == SDL_SCANCODE_SPACE)
+            {
+                Is_paused = !Is_paused;
+            }
+            if(event->key.keysym.scancode == SDLK_ESCAPE)
+            {
+                Is_running = false;
+            }
         }
         current_scene->handle_event(event);
     }
@@ -241,7 +249,10 @@ SDL_Point Game::render_text(std::string& text,int x,int y,TTF_Font* font,bool is
 // update
 void Game::update(float delta_time)
 {
-    update_background(delta_time);
+    if(!is_paused())
+    {
+        update_background(delta_time);
+    }
     current_scene->update(delta_time);
 }
 void Game::update_background(float delta_time)

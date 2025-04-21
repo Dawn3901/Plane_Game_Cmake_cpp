@@ -51,5 +51,5 @@ void Scene_title::update(float delta_time)
     if(timer >= 0.8f)
     {
         timer -= 0.8f;
-    } 
+    }
 }
