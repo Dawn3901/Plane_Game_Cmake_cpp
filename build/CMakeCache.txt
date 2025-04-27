@@ -118,13 +118,13 @@ CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 CMAKE_PROJECT_NAME:STATIC=PlaneGame
 
 //Value Computed by CMake
-CMAKE_PROJECT_VERSION:STATIC=1.0
+CMAKE_PROJECT_VERSION:STATIC=1.1
 
 //Value Computed by CMake
 CMAKE_PROJECT_VERSION_MAJOR:STATIC=1
 
 //Value Computed by CMake
-CMAKE_PROJECT_VERSION_MINOR:STATIC=0
+CMAKE_PROJECT_VERSION_MINOR:STATIC=1
 
 //Value Computed by CMake
 CMAKE_PROJECT_VERSION_PATCH:STATIC=
@@ -238,6 +238,9 @@ Project_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
 Project_SOURCE_DIR:STATIC=D:/GCC/code/Cmake/Cmake_Game
+
+//The directory containing a CMake configuration file for SDL2.
+SDL2_DIR:PATH=D:/GCC/Library/SDL2/cmake
 
 //The directory containing a CMake configuration file for SDL2_image.
 SDL2_image_DIR:PATH=D:/GCC/Library/SDL2/cmake

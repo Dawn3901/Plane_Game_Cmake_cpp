@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(PlaneGame VERSION 1.0 LANGUAGES C CXX) 
+project(PlaneGame VERSION 1.01 LANGUAGES C CXX) 
 
 set(TARGET ${PROJECT_NAME}-${PROJECT_VERSION})
 set(CMAKE_CXX_STANDARD 17)
@@ -14,7 +14,6 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-set(SDL2_DIR "D:/GCC/Library/SDL2/cmake")
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED)
 find_package(SDL2_ttf REQUIRED)

@@ -173,9 +173,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="D:\GCC\code\Cmake\Cmake_Game\build\PlaneGame-1.0.vcxproj">
-      <Project>{5D3384DD-690B-3601-9466-786EDF399437}</Project>
-      <Name>PlaneGame-1.0</Name>
+    <ProjectReference Include="D:\GCC\code\Cmake\Cmake_Game\build\PlaneGame-1.1.vcxproj">
+      <Project>{8D7C9354-7E8B-3895-B8F3-1BDBDCC90EDC}</Project>
+      <Name>PlaneGame-1.1</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

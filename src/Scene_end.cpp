@@ -82,6 +82,10 @@ void Scene_end::handle_event(SDL_Event* event)
                 auto scene_main = new Scene_main();
                 game.change_scene(scene_main);
             }
+            if(event->key.keysym.scancode == SDL_SCANCODE_ESCAPE)
+            {
+                game.quit();
+            }
         }
     }
 }
@@ -129,5 +133,10 @@ void Scene_end::render_phase_2()
     if(blink_timer < 0.5f)
     {
         game.render_text_center(end,1.0f,game.get_text_font());
+    }
+    std::string return_menu = "Press ESC to quit.";
+    if(blink_timer < 0.5f)
+    {
+        game.render_text_center(return_menu,1.1f,game.get_text_font());
     }
 }

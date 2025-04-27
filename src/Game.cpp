@@ -144,6 +144,10 @@ void Game::run()
         }
     }
 }
+void Game::quit()
+{
+    Is_running = false;
+}
 void Game::change_scene(Scene* newScene)
 {
     if(current_scene != nullptr)

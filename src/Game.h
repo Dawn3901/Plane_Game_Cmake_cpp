@@ -21,6 +21,7 @@ public:
     void run();  
     void change_scene(Scene*);
     void handle_event(SDL_Event*);
+    void quit();
     // render
     SDL_Point render_text_center(std::string&,float,TTF_Font*);
     SDL_Point render_text(std::string&,int,int,TTF_Font*,bool is_left = true);
